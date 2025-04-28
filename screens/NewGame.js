@@ -11,31 +11,56 @@ import {
 import { Colors } from "../constants/Colors";
 import CustomButton from "../components/atoms/CustomButton";
 import { GameService } from "../services/GameService";
-import GameScreen from "./GameScreen";
+import socketService from "../services/SocketService";
+
+const SERVER_URL = "https://wordbrust-server.onrender.com";
 
 const NewGame = ({ navigation }) => {
   const [isMatching, setIsMatching] = useState(false);
   const [currentGameType, setCurrentGameType] = useState(null);
 
-  // Ekranda butona basıldığında
   const handleFindMatch = async (gameType) => {
     try {
+      setIsMatching(true);
+      setCurrentGameType(gameType);
+
       const result = await GameService.findOpponent(gameType);
 
-      // BAŞARILI DURUM
-      Alert.alert("Başarılı", result.message, [
-        {
-          text: "Tamam",
-        },
-      ]);
+      if (result.success && result.game?.id) {
+        const gameId = result.game.id;
+
+        // 1. Socket bağlantısını aç
+        await socketService.connect(SERVER_URL);
+
+        // 2. Board eventini HEMEN dinle
+        socketService.onBoardInitialized((boardData) => {
+          console.log("📦 Gelen Board:", boardData);
+
+          setIsMatching(false);
+
+          // GameScreen'e yönlendir ve board bilgisini gönder
+          navigation.navigate("GameScreen", {
+            gameId: gameId,
+            board: boardData,
+          });
+        });
+
+        // 3. Sonra odaya katıl
+        socketService.joinGameRoom(gameId);
+
+      } else {
+        Alert.alert("Hata", "Oyun başlatılamadı");
+        setIsMatching(false);
+      }
     } catch (error) {
-      // HATA DURUMU
-      Alert.alert("Hata", error.message, [{ text: "Tamam" }]);
+      console.error(error);
+      Alert.alert("Hata", error.message || "Oyun aranırken hata oluştu");
+      setIsMatching(false);
     }
   };
+
   return (
     <View style={styles.container}>
-      {/* Ana içerik */}
       <View style={styles.content}>
         <View style={styles.textContainer}>
           <Text style={styles.headerText}>Hızlı Oyunlar</Text>
@@ -72,7 +97,6 @@ const NewGame = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Loading overlay */}
       {isMatching && (
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingContent}>

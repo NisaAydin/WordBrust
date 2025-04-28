@@ -8,6 +8,7 @@ import TabNavigator from "./navigation/TabNavigator"; // TabNavigator'ı import 
 import NewGame from "./screens/NewGame";
 import { Colors } from "./constants/Colors";
 import { AuthProvider } from "./services/AuthContext";
+import GameScreen from "./screens/GameScreen";
 
 const Stack = createStackNavigator();
 const App = () => {
@@ -74,6 +75,22 @@ const App = () => {
 
               cardOverlayEnabled: true,
               cardStyle: { backgroundColor: "transparent" },
+            }}
+          />
+          <Stack.Screen
+            name="GameScreen"
+            component={GameScreen} // GameScreen'i buraya ekleyeceğiz
+            options={{
+              title: "Oyun",
+              headerShown: true,
+              headerTitleAlign: "center",
+              headerStyle: {
+                backgroundColor: Colors.background,
+              },
+              headerTintColor: Colors.primary,
+              headerTitleStyle: {
+                fontWeight: "bold",
+              },
             }}
           />
         </Stack.Navigator>
