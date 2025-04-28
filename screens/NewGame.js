@@ -47,7 +47,6 @@ const NewGame = ({ navigation }) => {
 
         // 3. Sonra odaya katıl
         socketService.joinGameRoom(gameId);
-
       } else {
         Alert.alert("Hata", "Oyun başlatılamadı");
         setIsMatching(false);

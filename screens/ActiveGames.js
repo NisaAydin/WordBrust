@@ -54,15 +54,11 @@ const ActiveGames = () => {
           <Text style={styles.status}>{item.status}</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.playButton}>
-        <Ionicons name="play-circle" size={32} color="white" />
-      </TouchableOpacity>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerText}>Aktif Oyunlar</Text>
       <FlatList
         data={activeGamesData}
         renderItem={renderItem}
@@ -92,9 +88,10 @@ const styles = StyleSheet.create({
   gameCard: {
     flexDirection: "row",
     backgroundColor: Colors.primary,
-    borderRadius: 15,
+    borderRadius: 30,
     marginBottom: 15,
-    padding: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 30,
     alignItems: "center",
     justifyContent: "space-between",
     overflow: "hidden", // Dışarı taşmaları engellemek için

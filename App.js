@@ -9,6 +9,7 @@ import NewGame from "./screens/NewGame";
 import { Colors } from "./constants/Colors";
 import { AuthProvider } from "./services/AuthContext";
 import GameScreen from "./screens/GameScreen";
+import ActiveGames from "./screens/ActiveGames";
 
 const Stack = createStackNavigator();
 const App = () => {
@@ -72,9 +73,6 @@ const App = () => {
               headerTitleStyle: {
                 fontWeight: "bold",
               },
-
-              cardOverlayEnabled: true,
-              cardStyle: { backgroundColor: "transparent" },
             }}
           />
           <Stack.Screen
@@ -82,6 +80,22 @@ const App = () => {
             component={GameScreen} // GameScreen'i buraya ekleyeceğiz
             options={{
               title: "Oyun",
+              headerShown: true,
+              headerTitleAlign: "center",
+              headerStyle: {
+                backgroundColor: Colors.background,
+              },
+              headerTintColor: Colors.primary,
+              headerTitleStyle: {
+                fontWeight: "bold",
+              },
+            }}
+          />
+          <Stack.Screen
+            name="ActiveGames"
+            component={ActiveGames}
+            options={{
+              title: "Aktif Oyunlarım",
               headerShown: true,
               headerTitleAlign: "center",
               headerStyle: {

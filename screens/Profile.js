@@ -6,17 +6,19 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
+  Image,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { UserService } from "../services/UserService";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../services/AuthContext";
+import { UserService } from "../services/UserService";
+import { Colors } from "../constants/Colors"; // Ensure you have this color file for consistency
+import Circle from "../components/atoms/Circle"; // Circle component for design
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
-  const { logout } = useAuth(); // logout fonksiyonunu burada alıyoruz
+  const { logout } = useAuth();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -24,7 +26,7 @@ const Profile = () => {
         const data = await UserService.getProfile();
         setProfile(data);
       } catch (error) {
-        console.log("Hata:", error.message);
+        console.log("Error:", error.message);
       } finally {
         setLoading(false);
       }
@@ -35,52 +37,54 @@ const Profile = () => {
 
   const handleLogout = async () => {
     try {
-      await logout(); // AuthContext'teki logout fonksiyonunu kullanıyoruz
-      Alert.alert("Başarılı", "Çıkış yapıldı");
-
-      // Çıkış yaptıktan sonra kullanıcıyı AuthScreen'e yönlendiriyoruz
+      await logout();
+      Alert.alert("Success", "Logged out successfully.");
       navigation.reset({
         index: 0,
         routes: [{ name: "AuthScreen" }],
       });
     } catch (error) {
-      console.log("Çıkış hatası:", error);
-      Alert.alert("Hata", "Çıkış yapılamadı");
+      console.log("Logout error:", error);
+      Alert.alert("Error", "Logout failed.");
     }
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
+      {/* Arka Plan Tasarımı */}
+      <Circle size={250} position={{ left: -120, top: -100 }} mode="light" />
+      <Circle size={250} position={{ left: -50, top: -80 }} mode="light" />
+
       {/* Profil Bilgileri */}
-      {profile ? (
-        <View style={styles.profileInfo}>
-          <Text style={styles.label}>Kullanıcı Adı:</Text>
-          <Text style={styles.value}>{profile.username}</Text>
-
-          <Text style={styles.label}>Email:</Text>
-          <Text style={styles.value}>{profile.email}</Text>
-
-          <Text style={styles.label}>Kazanma:</Text>
-          <Text style={styles.value}>{profile.user_win_count}</Text>
-
-          <Text style={styles.label}>Kayıp:</Text>
-          <Text style={styles.value}>{profile.user_loss_count}</Text>
-        </View>
-      ) : (
-        <Text style={styles.errorText}>Profil bilgisi yüklenemedi</Text>
-      )}
+      <View style={styles.profileContainer}>
+        <Image
+          source={
+            profile?.profileImage ||
+            require("../assets/images/profile-picture.png")
+          }
+          style={styles.profileImage}
+        />
+        <Text style={styles.username}>{profile?.username || "Misafir"}</Text>
+        <Text style={styles.infoText}>{profile?.email || "N/A"}</Text>
+        <Text style={styles.infoText}>
+          Wins: {profile?.user_win_count || 0}
+        </Text>
+        <Text style={styles.infoText}>
+          Losses: {profile?.user_loss_count || 0}
+        </Text>
+      </View>
 
       {/* Çıkış Butonu */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>ÇIKIŞ YAP</Text>
+        <Text style={styles.logoutButtonText}>LOG OUT</Text>
       </TouchableOpacity>
     </View>
   );
@@ -89,51 +93,59 @@ const Profile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: Colors.background,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  profileInfo: {
+  profileContainer: {
+    width: "100%",
     backgroundColor: "white",
-    borderRadius: 10,
-    padding: 20,
-    marginBottom: 20,
+    borderRadius: 15,
+    padding: 30,
+    alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
     elevation: 5,
+    marginBottom: 40,
   },
-  label: {
-    fontSize: 16,
+  profileImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    borderColor: "#fff",
+    marginBottom: 20,
+  },
+  username: {
+    fontSize: 24,
     fontWeight: "bold",
-    marginTop: 10,
-    color: "#333",
-  },
-  value: {
-    fontSize: 16,
+    color: Colors.primary,
     marginBottom: 10,
-    color: "#666",
   },
-  errorText: {
+  infoText: {
     fontSize: 16,
-    color: "red",
-    textAlign: "center",
-    marginVertical: 20,
+    color: "#666",
+    marginVertical: 5,
   },
   logoutButton: {
-    backgroundColor: "#ff4444",
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: Colors.primary,
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 25,
     alignItems: "center",
-    marginTop: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   logoutButtonText: {
     color: "white",
