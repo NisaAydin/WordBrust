@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   },
   rememberMeText: {
     fontSize: 13,
-    marginLeft: 10,
+    marginLeft: 5,
     color: "#333",
   },
 });

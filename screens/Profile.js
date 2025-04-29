@@ -39,10 +39,6 @@ const Profile = () => {
     try {
       await logout();
       Alert.alert("Success", "Logged out successfully.");
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "AuthScreen" }],
-      });
     } catch (error) {
       console.log("Logout error:", error);
       Alert.alert("Error", "Logout failed.");
@@ -73,7 +69,9 @@ const Profile = () => {
           style={styles.profileImage}
         />
         <Text style={styles.username}>{profile?.username || "Misafir"}</Text>
-        <Text style={styles.infoText}>{profile?.email || "N/A"}</Text>
+        <Text style={styles.infoText}>
+          {profile?.email || "misafir@mail.com"}
+        </Text>
         <Text style={styles.infoText}>
           Wins: {profile?.user_win_count || 0}
         </Text>

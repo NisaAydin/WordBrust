@@ -7,12 +7,14 @@ import AuthScreen from "./screens/AuthScreen";
 import TabNavigator from "./navigation/TabNavigator";
 import NewGame from "./screens/NewGame";
 import { Colors } from "./constants/Colors";
-import { AuthProvider } from "./services/AuthContext";
+import { AuthProvider, useAuth } from "./services/AuthContext"; // useAuth ekledik
 import GameScreen from "./screens/GameScreen";
 import ActiveGames from "./screens/ActiveGames";
 
 const Stack = createStackNavigator();
-const App = () => {
+
+const AppNavigator = () => {
+  const { isAuthenticated } = useAuth(); // Auth durumunu kontrol ediyoruz
   const [isFirstLaunch, setIsFirstLaunch] = useState(null);
 
   useEffect(() => {
@@ -39,23 +41,22 @@ const App = () => {
   }
 
   return (
-    <AuthProvider>
-      <NavigationContainer>
-        <Stack.Navigator
-          initialRouteName={isFirstLaunch ? "OnboardingScreen" : "AuthScreen"}
-        >
-          <Stack.Screen
-            name="OnboardingScreen"
-            component={OnboardingScreen}
-            options={{ headerShown: false }}
-          />
-
-          <Stack.Screen
-            name="AuthScreen"
-            component={AuthScreen}
-            options={{ headerShown: false }}
-          />
-
+    <Stack.Navigator>
+      {isFirstLaunch && (
+        <Stack.Screen
+          name="OnboardingScreen"
+          component={OnboardingScreen}
+          options={{ headerShown: false }}
+        />
+      )}
+      {!isAuthenticated ? (
+        <Stack.Screen
+          name="AuthScreen"
+          component={AuthScreen}
+          options={{ headerShown: false }}
+        />
+      ) : (
+        <>
           <Stack.Screen
             name="TabNavigator"
             component={TabNavigator}
@@ -79,7 +80,7 @@ const App = () => {
           />
           <Stack.Screen
             name="GameScreen"
-            component={GameScreen} // GameScreen'i buraya ekleyeceğiz
+            component={GameScreen}
             options={{
               title: "Oyun",
               headerShown: true,
@@ -109,7 +110,17 @@ const App = () => {
               },
             }}
           />
-        </Stack.Navigator>
+        </>
+      )}
+    </Stack.Navigator>
+  );
+};
+
+const App = () => {
+  return (
+    <AuthProvider>
+      <NavigationContainer>
+        <AppNavigator />
       </NavigationContainer>
     </AuthProvider>
   );

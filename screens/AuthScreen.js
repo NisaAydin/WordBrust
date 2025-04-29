@@ -36,10 +36,6 @@ const AuthScreen = ({ navigation }) => {
       const response = await login(username, password, rememberMe);
       if (response.status === 200) {
         Alert.alert("Giriş başarılı.");
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "TabNavigator" }],
-        });
       }
     } catch (error) {
       Alert.alert("Hata", error.message);

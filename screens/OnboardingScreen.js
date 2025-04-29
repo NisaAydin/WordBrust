@@ -27,7 +27,7 @@ const OnboardingScreen = ({ navigation }) => {
     } else if (index === 1) {
       try {
         await AsyncStorage.setItem("isFirstLaunch", "false");
-        navigation.replace("AuthScreen");
+        navigation.navigate("AuthScreen");
       } catch (error) {
         console.log("AsyncStorage error:", error);
       }
