@@ -24,13 +24,14 @@ api.interceptors.request.use(
 );
 
 export const AuthService = {
-  async login(username, password) {
+  async login(username, password, rememberMe) {
     try {
       const response = await api.post("/login", {
         email_or_username: username,
         user_password: password,
-        remember_me: false,
+        remember_me: rememberMe,
       });
+      console.log("Veri:", response.data);
 
       // Token'ı AsyncStorage'e kaydet
       if (response.data.token) {

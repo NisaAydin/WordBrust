@@ -25,9 +25,9 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  const login = async (username, password) => {
+  const login = async (username, password, rememberMe) => {
     try {
-      const response = await AuthService.login(username, password);
+      const response = await AuthService.login(username, password, rememberMe);
       setUser(response.data.user);
       return response;
     } catch (error) {

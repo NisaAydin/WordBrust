@@ -10,6 +10,8 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Alert,
+  Switch,
+  CheckBox,
   ActivityIndicator,
 } from "react-native";
 import SegmentedControlTab from "react-native-segmented-control-tab";
@@ -27,10 +29,11 @@ const AuthScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
 
-  const handleLogin = async (username, password) => {
+  const handleLogin = async (username, password, rememberMe) => {
     setLoading(true);
+    console.log(rememberMe);
     try {
-      const response = await login(username, password);
+      const response = await login(username, password, rememberMe);
       if (response.status === 200) {
         Alert.alert("Giriş başarılı.");
         navigation.reset({

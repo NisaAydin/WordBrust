@@ -25,8 +25,12 @@ const OnboardingScreen = ({ navigation }) => {
       setCurrentPage((prevPage) => prevPage + 1);
       flatListRef.current.scrollToIndex({ index: currentPage + 1 });
     } else if (index === 1) {
-      await AsyncStorage.setItem("isFirstLaunch", "false");
-      navigation.navigate("AuthScreen");
+      try {
+        await AsyncStorage.setItem("isFirstLaunch", "false");
+        navigation.replace("AuthScreen");
+      } catch (error) {
+        console.log("AsyncStorage error:", error);
+      }
     }
   };
 

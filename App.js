@@ -4,7 +4,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import OnboardingScreen from "./screens/OnboardingScreen";
 import AuthScreen from "./screens/AuthScreen";
-import TabNavigator from "./navigation/TabNavigator"; // TabNavigator'ı import ettik
+import TabNavigator from "./navigation/TabNavigator";
 import NewGame from "./screens/NewGame";
 import { Colors } from "./constants/Colors";
 import { AuthProvider } from "./services/AuthContext";
@@ -27,6 +27,7 @@ const App = () => {
         }
       } catch (error) {
         console.log("Error checking first launch", error);
+        setIsFirstLaunch(false);
       }
     };
 
@@ -40,20 +41,21 @@ const App = () => {
   return (
     <AuthProvider>
       <NavigationContainer>
-        <Stack.Navigator>
-          {isFirstLaunch === true ? (
-            <Stack.Screen
-              name="OnboardingScreen"
-              component={OnboardingScreen}
-              options={{ headerShown: false }}
-            />
-          ) : (
-            <Stack.Screen
-              name="AuthScreen"
-              component={AuthScreen}
-              options={{ headerShown: false }}
-            />
-          )}
+        <Stack.Navigator
+          initialRouteName={isFirstLaunch ? "OnboardingScreen" : "AuthScreen"}
+        >
+          <Stack.Screen
+            name="OnboardingScreen"
+            component={OnboardingScreen}
+            options={{ headerShown: false }}
+          />
+
+          <Stack.Screen
+            name="AuthScreen"
+            component={AuthScreen}
+            options={{ headerShown: false }}
+          />
+
           <Stack.Screen
             name="TabNavigator"
             component={TabNavigator}
