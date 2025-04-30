@@ -12,6 +12,9 @@ import {
 
 import { Colors } from "../constants/Colors";
 import CardComponent from "../components/atoms/CardComponent";
+import socket from "../services/SocketService";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 // Hücre boyutu ayarlanıyor
 const CELL_SIZE = Dimensions.get("window").width / 15 - 3;
@@ -26,6 +29,15 @@ const GameScreen = ({ route }) => {
   const [letters, setLetters] = useState(
     playerLetters || ["A", "B", "C", "D", "E", "F", "G"]
   ); // Örnek harfler
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        // Sayfa odaktan çıkınca socketten ayrıl
+        socket.leaveGameRoom(gameId);
+      };
+    }, [gameId])
+  );
 
   // Veriyi 15x15 matrisine dönüştürme fonksiyonu
   const createGrid = (board) => {

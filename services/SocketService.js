@@ -48,6 +48,26 @@ class SocketService {
       this.socket.on("board_initialized", callback);
     }
   }
+
+  leaveGameRoom(gameId) {
+    if (this.socket && this.socket.connected) {
+      this.socket.emit("leave_game_room", { gameId });
+      console.log("Oda bırakıldı:", gameId);
+    }
+  }
+
+  joinGameRoomAndListenBoard(gameId, onBoardReady) {
+    if (this.socket && this.socket.connected) {
+      this.socket.emit("join_game_room", { gameId });
+      this.socket.off("board_initialized");
+      this.socket.on("board_initialized", (board) => {
+        console.log("Tahta geldi:", board);
+        onBoardReady(board);
+      });
+    } else {
+      console.warn("Socket bağlı değil, bağlanmadan önce çağrı yapıldı.");
+    }
+  }
 }
 
 const socketService = new SocketService();

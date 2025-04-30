@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,63 +6,95 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { Colors } from "../constants/Colors";
-import { Ionicons } from "@expo/vector-icons"; // Iconlar için Ionicons
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+import socketService from "../services/SocketService"; // socket ekledik
+
+const API_URL = "https://wordbrust-server.onrender.com/api"; // <- kendi API adresinle değiştir
 
 const ActiveGames = () => {
-  // Sahte oyun verisi
-  const activeGamesData = [
-    {
-      id: "1",
-      userName: "arokoth",
-      gameTime: "9 - 25",
-      duration: "47 dk.",
-      status: "Oyun sırası sizde.",
-    },
-    {
-      id: "2",
-      userName: "jsmith",
-      gameTime: "10 - 30",
-      duration: "32 dk.",
-      status: "Oyun sırası bekleniyor.",
-    },
-    {
-      id: "3",
-      userName: "mjones",
-      gameTime: "2 - 15",
-      duration: "5 dk.",
-      status: "Oyun sırası sizde.",
-    },
-  ];
+  const [activeGames, setActiveGames] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
 
-  // FlatList render item fonksiyonu
+  useEffect(() => {
+    const fetchActiveGames = async () => {
+      try {
+        const token = await AsyncStorage.getItem("userToken");
+        const response = await axios.get(`${API_URL}/game/active-games`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setActiveGames(response.data);
+      } catch (error) {
+        console.error("Aktif oyunlar alınamadı:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActiveGames();
+  }, []);
+
+  const handleGamePress = async (gameId) => {
+    try {
+      // Eğer socket bağlı değilse bağlan
+      if (!socketService.socket || !socketService.socket.connected) {
+        await socketService.connect("https://wordbrust-server.onrender.com"); // kendi URL’inle değiştir
+      }
+
+      socketService.joinGameRoomAndListenBoard(gameId, (board) => {
+        navigation.navigate("GameScreen", {
+          gameId,
+          board,
+          playerLetters: null,
+        });
+      });
+    } catch (error) {
+      console.error("Oyuna katılırken hata:", error);
+    }
+  };
+
   const renderItem = ({ item }) => (
-    <View style={styles.gameCard}>
+    <TouchableOpacity
+      style={styles.gameCard}
+      onPress={() => handleGamePress(item.gameId)}
+    >
       <View style={styles.cardContent}>
         <Image
-          source={require("../assets/images/profile-picture.png")} // Sahte bir avatar
+          source={require("../assets/images/profile-picture.png")}
           style={styles.avatar}
         />
         <View style={styles.gameInfo}>
-          <Text style={styles.userName}>{item.userName}</Text>
+          <Text style={styles.userName}>{item.opponentUsername}</Text>
           <Text style={styles.gameDetails}>
-            <Text style={styles.label}>Liste: </Text>
-            {item.gameTime} - <Text style={styles.label}>Süre: </Text>
-            {item.duration}
+            {item.scoreText} - {item.durationText}
           </Text>
-          <Text style={styles.status}>{item.status}</Text>
+          <Text style={styles.status}>{item.turnInfo}</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
+
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={activeGamesData}
+        data={activeGames}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.gameId.toString()}
         contentContainerStyle={styles.listContainer}
       />
     </View>
@@ -76,12 +108,6 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingHorizontal: 20,
   },
-  headerText: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "black",
-    marginBottom: 20,
-  },
   listContainer: {
     paddingBottom: 20,
   },
@@ -94,7 +120,7 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
     alignItems: "center",
     justifyContent: "space-between",
-    overflow: "hidden", // Dışarı taşmaları engellemek için
+    overflow: "hidden",
   },
   cardContent: {
     flexDirection: "row",
@@ -126,10 +152,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 5,
   },
-  playButton: {
-    backgroundColor: "#0056b3",
-    padding: 10,
-    borderRadius: 50,
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
