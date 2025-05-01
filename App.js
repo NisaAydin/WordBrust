@@ -60,7 +60,7 @@ const AppNavigator = () => {
           <Stack.Screen
             name="TabNavigator"
             component={TabNavigator}
-            options={{ headerShown: false }}
+            options={{ headerShown: false, headerBackTitle: "Geri" }}
           />
           <Stack.Screen
             name="NewGame"
@@ -72,10 +72,11 @@ const AppNavigator = () => {
               headerStyle: {
                 backgroundColor: Colors.background,
               },
-              headerTintColor: Colors.primary,
+              headerTintColor: "white",
               headerTitleStyle: {
                 fontWeight: "bold",
               },
+              headerBackTitle: "Back", // Geri butonu için başlık
             }}
           />
           <Stack.Screen
@@ -104,7 +105,7 @@ const AppNavigator = () => {
               headerStyle: {
                 backgroundColor: Colors.background,
               },
-              headerTintColor: Colors.primary,
+              headerTintColor: "white",
               headerTitleStyle: {
                 fontWeight: "bold",
               },

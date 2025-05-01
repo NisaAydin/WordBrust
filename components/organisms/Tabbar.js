@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   },
   tabBarWrapper: {
     flexDirection: "row",
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.secondary,
     marginHorizontal: 20,
     marginBottom: 10,
     borderRadius: 30,

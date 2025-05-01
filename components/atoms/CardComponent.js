@@ -33,6 +33,8 @@ const styles = StyleSheet.create({
     paddingTop: 40, // Üst padding'i artır
     minHeight: 375, // Sabit yükseklik yerine minimum yükseklik
     backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+    borderWidth: 2,
   },
   oppositeCard: {
     borderTopLeftRadius: 30,
