@@ -8,7 +8,7 @@ const Circle = ({ size, position, mode = "dark" }) => {
 
   switch (mode) {
     case "dark":
-      circleColor = "rgba(57, 92, 119, 0.25)"; // Dark mode color
+      circleColor = "rgba(61, 4, 94, 0.25)"; // Dark mode color
       break;
     case "light":
     default:

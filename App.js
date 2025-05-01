@@ -10,6 +10,7 @@ import { Colors } from "./constants/Colors";
 import { AuthProvider, useAuth } from "./services/AuthContext"; // useAuth ekledik
 import GameScreen from "./screens/GameScreen";
 import ActiveGames from "./screens/ActiveGames";
+import { StatusBar } from "react-native";
 
 const Stack = createStackNavigator();
 
@@ -41,79 +42,83 @@ const AppNavigator = () => {
   }
 
   return (
-    <Stack.Navigator>
-      {isFirstLaunch && (
-        <Stack.Screen
-          name="OnboardingScreen"
-          component={OnboardingScreen}
-          options={{ headerShown: false }}
-        />
-      )}
-      {!isAuthenticated ? (
-        <Stack.Screen
-          name="AuthScreen"
-          component={AuthScreen}
-          options={{ headerShown: false }}
-        />
-      ) : (
-        <>
+    <>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
+      <Stack.Navigator>
+        {isFirstLaunch && (
           <Stack.Screen
-            name="TabNavigator"
-            component={TabNavigator}
-            options={{ headerShown: false, headerBackTitle: "Geri" }}
+            name="OnboardingScreen"
+            component={OnboardingScreen}
+            options={{ headerShown: false }}
           />
+        )}
+        {!isAuthenticated ? (
           <Stack.Screen
-            name="NewGame"
-            component={NewGame}
-            options={{
-              title: "Yeni Oyun",
-              headerShown: true,
-              headerTitleAlign: "center",
-              headerStyle: {
-                backgroundColor: Colors.background,
-              },
-              headerTintColor: "white",
-              headerTitleStyle: {
-                fontWeight: "bold",
-              },
-              headerBackTitle: "Back", // Geri butonu için başlık
-            }}
+            name="AuthScreen"
+            component={AuthScreen}
+            options={{ headerShown: false }}
           />
-          <Stack.Screen
-            name="GameScreen"
-            component={GameScreen}
-            options={{
-              title: "Oyun",
-              headerShown: true,
-              headerTitleAlign: "center",
-              headerStyle: {
-                backgroundColor: Colors.background,
-              },
-              headerTintColor: Colors.primary,
-              headerTitleStyle: {
-                fontWeight: "bold",
-              },
-            }}
-          />
-          <Stack.Screen
-            name="ActiveGames"
-            component={ActiveGames}
-            options={{
-              title: "Aktif Oyunlarım",
-              headerShown: true,
-              headerTitleAlign: "center",
-              headerStyle: {
-                backgroundColor: Colors.background,
-              },
-              headerTintColor: "white",
-              headerTitleStyle: {
-                fontWeight: "bold",
-              },
-            }}
-          />
-        </>
-      )}
-    </Stack.Navigator>
+        ) : (
+          <>
+            <Stack.Screen
+              name="TabNavigator"
+              component={TabNavigator}
+              options={{ headerShown: false, headerBackTitle: "Geri" }}
+            />
+            <Stack.Screen
+              name="NewGame"
+              component={NewGame}
+              options={{
+                title: "Yeni Oyun",
+                headerShown: true,
+                headerTitleAlign: "center",
+                headerStyle: {
+                  backgroundColor: Colors.background,
+                },
+                headerTintColor: "white",
+                headerTitleStyle: {
+                  fontWeight: "bold",
+                },
+                headerBackTitle: "Back",
+              }}
+            />
+            <Stack.Screen
+              name="GameScreen"
+              component={GameScreen}
+              options={{
+                title: "Oyun",
+                headerShown: true,
+                headerTitleAlign: "center",
+                headerStyle: {
+                  backgroundColor: Colors.background,
+                },
+                headerTintColor: Colors.primary,
+                headerTitleStyle: {
+                  fontWeight: "bold",
+                },
+              }}
+            />
+            <Stack.Screen
+              name="ActiveGames"
+              component={ActiveGames}
+              options={{
+                title: "Aktif Oyunlarım",
+                headerShown: true,
+                headerTitleAlign: "center",
+                headerStyle: {
+                  backgroundColor: Colors.background,
+                },
+                headerTintColor: "white",
+                headerTitleStyle: {
+                  fontWeight: "bold",
+                },
+                headerBackTitle: "Back",
+              }}
+            />
+          </>
+        )}
+      </Stack.Navigator>
+    </>
   );
 };
 

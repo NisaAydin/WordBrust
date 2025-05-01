@@ -22,7 +22,7 @@ const HomeScreen = ({ navigation }) => {
     >
       {/* Upper Info */}
       <View style={styles.header}>
-        <Text style={styles.time}>9:41</Text>
+        <Text style={styles.time}></Text>
         <View style={styles.profileIcon}>
           <Image
             source={

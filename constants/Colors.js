@@ -1,6 +1,6 @@
 export const Colors = {
   lightBlue: "#67859C",
-  light: "#D9D9D9",
+  light: "#EAE3E3",
   primary: "#6600CC", // Ana buton rengi
   secondary: "#9966FF", // Profil iconu border, secondary buton rengi
   background: "#1A0033", // Gradient başlangıç rengi

@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.light,
     padding: 20,
   },
   innerContainer: {
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   textButton: {
     marginLeft: 3,
-    color: Colors.secondary,
+    color: Colors.primary,
     fontWeight: "bold",
   },
 });

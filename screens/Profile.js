@@ -8,16 +8,15 @@ import {
   StyleSheet,
   Image,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Colors } from "../constants/Colors";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../services/AuthContext";
 import { UserService } from "../services/UserService";
-import { Colors } from "../constants/Colors"; // Ensure you have this color file for consistency
-import Circle from "../components/atoms/Circle"; // Circle component for design
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigation = useNavigation();
   const { logout } = useAuth();
 
   useEffect(() => {
@@ -47,51 +46,97 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
+      <LinearGradient
+        colors={[Colors.background, Colors.gradientEnd]}
+        style={styles.loadingContainer}
+      >
+        <ActivityIndicator size="large" color={Colors.textAccent} />
+      </LinearGradient>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Arka Plan Tasarımı */}
-      <Circle size={250} position={{ left: -120, top: -100 }} mode="light" />
-      <Circle size={250} position={{ left: -50, top: -80 }} mode="light" />
-
+    <LinearGradient
+      colors={[Colors.background, Colors.gradientEnd]}
+      style={styles.container}
+    >
       {/* Profil Bilgileri */}
       <View style={styles.profileContainer}>
-        <Image
-          source={
-            profile?.profileImage ||
-            require("../assets/images/profile-picture.png")
-          }
-          style={styles.profileImage}
-        />
+        <View style={styles.avatarContainer}>
+          <Image
+            source={
+              profile?.profileImage ||
+              require("../assets/images/profile-picture.png")
+            }
+            style={styles.profileImage}
+          />
+          <View style={styles.levelBadge}>
+            <MaterialCommunityIcons
+              name="star"
+              size={16}
+              color={Colors.textAccent}
+            />
+            <Text style={styles.levelText}>Seviye {profile?.level || 1}</Text>
+          </View>
+        </View>
+
         <Text style={styles.username}>{profile?.username || "Misafir"}</Text>
         <Text style={styles.infoText}>
           {profile?.email || "misafir@mail.com"}
         </Text>
-        <Text style={styles.infoText}>
-          Wins: {profile?.user_win_count || 0}
-        </Text>
-        <Text style={styles.infoText}>
-          Losses: {profile?.user_loss_count || 0}
-        </Text>
+
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <MaterialCommunityIcons
+              name="trophy"
+              size={24}
+              color={Colors.textAccent}
+            />
+            <Text style={styles.statText}>{profile?.user_win_count || 0}</Text>
+            <Text style={styles.statLabel}>Galibiyet</Text>
+          </View>
+
+          <View style={styles.statItem}>
+            <MaterialCommunityIcons
+              name="shield-remove"
+              size={24}
+              color={Colors.error}
+            />
+            <Text style={styles.statText}>{profile?.user_loss_count || 0}</Text>
+            <Text style={styles.statLabel}>Mağlubiyet</Text>
+          </View>
+
+          <View style={styles.statItem}>
+            <MaterialCommunityIcons
+              name="chart-line"
+              size={24}
+              color={Colors.success}
+            />
+            <Text style={styles.statText}>
+              {profile?.successRate ? `${profile.successRate}%` : "0%"}
+            </Text>
+            <Text style={styles.statLabel}>Başarı</Text>
+          </View>
+        </View>
       </View>
 
       {/* Çıkış Butonu */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <MaterialCommunityIcons
+          name="logout-variant"
+          size={20}
+          color="white"
+          style={styles.logoutIcon}
+        />
         <Text style={styles.logoutButtonText}>LOG OUT</Text>
       </TouchableOpacity>
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
@@ -103,52 +148,97 @@ const styles = StyleSheet.create({
   },
   profileContainer: {
     width: "100%",
-    backgroundColor: "white",
+    backgroundColor: Colors.statCardBackground,
     borderRadius: 15,
     padding: 30,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
+    borderWidth: 1,
+    borderColor: Colors.statCardBorder,
     marginBottom: 40,
+  },
+  avatarContainer: {
+    position: "relative",
+    marginBottom: 20,
   },
   profileImage: {
     width: 120,
     height: 120,
     borderRadius: 60,
     borderWidth: 3,
-    borderColor: "#fff",
-    marginBottom: 20,
+    borderColor: Colors.secondary,
+  },
+  levelBadge: {
+    position: "absolute",
+    bottom: -5,
+    right: 10,
+    backgroundColor: Colors.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: Colors.buttonBorder,
+  },
+  levelText: {
+    color: Colors.textPrimary,
+    fontSize: 14,
+    fontFamily: "Roboto-Bold",
+    marginLeft: 4,
   },
   username: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: Colors.primary,
+    fontFamily: "Roboto-Bold",
+    color: Colors.textPrimary,
     marginBottom: 10,
   },
   infoText: {
     fontSize: 16,
-    color: "#666",
+    fontFamily: "Roboto-Medium",
+    color: Colors.textSecondary,
     marginVertical: 5,
   },
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginTop: 20,
+  },
+  statItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  statText: {
+    fontSize: 18,
+    fontFamily: "Roboto-Bold",
+    color: Colors.textPrimary,
+    marginVertical: 5,
+  },
+  statLabel: {
+    fontSize: 14,
+    fontFamily: "Roboto-Medium",
+    color: Colors.textSecondary,
+  },
   logoutButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.error,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 15,
     paddingHorizontal: 30,
-    borderRadius: 25,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#FF6B8B",
+    width: "90%", // Genişlik artırıldı
+    alignSelf: "center", // Ortalamak için
+  },
+  logoutIcon: {
+    marginRight: 10,
   },
   logoutButtonText: {
     color: "white",
     fontSize: 16,
-    fontWeight: "bold",
+    fontFamily: "Roboto-Bold",
   },
 });
 

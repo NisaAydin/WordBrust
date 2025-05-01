@@ -41,8 +41,11 @@ const LoginForm = ({ onLogin }) => {
         <Switch
           value={rememberMe}
           onValueChange={setRememberMe}
-          thumbColor={rememberMe ? Colors.lightBlue : "#ffffff"}
-          trackColor={{ false: "#E0E0E0", true: Colors.primary }}
+          thumbColor={rememberMe ? Colors.secondaryButtonBorder : "#ffffff"}
+          trackColor={{
+            false: "#E0E0E0",
+            true: Colors.secondaryButtonBackground,
+          }}
           style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
         />
         <Text style={styles.rememberMeText}>Remember Me</Text>

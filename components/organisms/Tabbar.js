@@ -4,12 +4,10 @@ import {
   TouchableOpacity,
   Text,
   StyleSheet,
-  Animated,
   Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { Colors } from "../../constants/Colors";
 
 const { width } = Dimensions.get("window");
 
@@ -47,26 +45,21 @@ const TabBar = ({ state, descriptors, navigation }) => {
           return (
             <TouchableOpacity
               key={route.key}
-              accessibilityRole="button"
-              accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={options.tabBarAccessibilityLabel}
-              testID={options.tabBarTestID}
               onPress={onPress}
               style={styles.tab}
+              activeOpacity={0.8}
             >
-              <View style={[styles.tabContent, isFocused && styles.activeTab]}>
-                <View style={styles.iconContainer}>
-                  <Ionicons
-                    name={
-                      isFocused
-                        ? tabIcons[route.name].active
-                        : tabIcons[route.name].inactive
-                    }
-                    size={28}
-                    color={isFocused ? Colors.primary : Colors.gray}
-                  />
-                  {isFocused && <View style={styles.activeIndicator} />}
-                </View>
+              <View style={styles.tabContent}>
+                <Ionicons
+                  name={
+                    isFocused
+                      ? tabIcons[route.name].active
+                      : tabIcons[route.name].inactive
+                  }
+                  size={26}
+                  color={isFocused ? "#9966FF" : "#D9D9D9"} // Exact hex colors
+                  style={styles.icon}
+                />
                 <Text style={[styles.label, isFocused && styles.activeLabel]}>
                   {label}
                 </Text>
@@ -89,16 +82,18 @@ const styles = StyleSheet.create({
   },
   tabBarWrapper: {
     flexDirection: "row",
-    backgroundColor: Colors.secondary,
+    backgroundColor: "#1A0033", // Dark purple background
     marginHorizontal: 20,
     marginBottom: 10,
-    borderRadius: 30,
+    borderRadius: 20,
     height: 70,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    borderWidth: 1,
+    borderColor: "#9966FF", // Light purple border
+    shadowColor: "#9966FF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 10,
   },
   tab: {
     flex: 1,
@@ -108,32 +103,21 @@ const styles = StyleSheet.create({
   tabContent: {
     alignItems: "center",
     justifyContent: "center",
-    width: "100%",
-    height: "100%",
-  },
-  activeTab: {
-    // Aktif tab özel stil
-  },
-  iconContainer: {
     position: "relative",
+    paddingTop: 8,
+  },
+  icon: {
     marginBottom: 4,
   },
-  activeIndicator: {
-    position: "absolute",
-    bottom: -8,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.primary,
-  },
+
   label: {
     fontSize: 12,
-    color: Colors.gray,
-    fontWeight: "500",
+    fontFamily: "Roboto-Medium",
+    color: "#D9D9D9", // Inactive text color
   },
   activeLabel: {
-    color: Colors.primary,
-    fontWeight: "600",
+    color: "#9966FF", // Active text color
+    fontFamily: "Roboto-Bold",
   },
 });
 
