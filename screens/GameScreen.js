@@ -15,6 +15,7 @@ import CardComponent from "../components/atoms/CardComponent";
 import socket from "../services/SocketService";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
+import { Ionicons } from "@expo/vector-icons";
 
 // Hücre boyutu ayarlanıyor
 const CELL_SIZE = Dimensions.get("window").width / 15 - 3;
@@ -277,26 +278,29 @@ const GameScreen = ({ route }) => {
         </View>
 
         {/* Oyun Kontrolleri */}
-        <View style={styles.controlsContainer}>
-          <TouchableOpacity
-            style={[styles.controlButton, styles.passButton]}
-            activeOpacity={0.7}
-          >
+
+        {/* Kontrol Butonları - Yeni Tasarım */}
+        <View style={styles.controlButtons}>
+          <TouchableOpacity style={styles.controlButton}>
+            <Ionicons name="pause" size={24} color={Colors.primary} />
             <Text style={styles.controlButtonText}>Pas</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.controlButton, styles.playButton]}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.controlButtonText}>Oyna</Text>
+          <TouchableOpacity style={[styles.controlButton, styles.playButton]}>
+            <Ionicons name="play" size={24} color="white" />
+            <Text style={[styles.controlButtonText, { color: "white" }]}>
+              Oyna
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.controlButton, styles.surrenderButton]}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.controlButtonText}>Teslim Ol</Text>
+          <TouchableOpacity style={styles.controlButton}>
+            <Ionicons name="arrow-undo" size={24} color={Colors.primary} />
+            <Text style={styles.controlButtonText}>Geri Al</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.controlButton}>
+            <Ionicons name="flag" size={24} color={Colors.primary} />
+            <Text style={styles.controlButtonText}>Teslim</Text>
           </TouchableOpacity>
         </View>
       </CardComponent>
@@ -396,7 +400,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#9b59b6",
   },
   mineCell: {
-    backgroundColor: "#e74c3c",
+    backgroundColor: "#9a8d7d",
   },
   selectedInfo: {
     marginTop: 20,
@@ -414,7 +418,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 10,
     borderRadius: 15,
-    marginTop: 20,
+    marginTop: 10,
     shadowColor: "#000",
     shadowOffset: { width: 5, height: 5 },
     shadowOpacity: 0.1,
@@ -430,7 +434,7 @@ const styles = StyleSheet.create({
     height: LETTER_SIZE,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Colors.secondary, // f39c12 D4C9BE
+    backgroundColor: Colors.primary, // f39c12 D4C9BE
     borderRadius: 12,
     marginHorizontal: 5,
     shadowColor: "#34495e",
@@ -460,43 +464,31 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#ffffff",
   },
-  controlsContainer: {
+  controlButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 20,
-    paddingHorizontal: 10,
+    marginBottom: 20,
+    marginTop: 10,
+    paddingHorizontal: 8,
   },
   controlButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
     alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "white",
+    width: "23%",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
-  },
-  passButton: {
-    backgroundColor: "#f39c12", // Turuncu tonu
+    borderColor: "#E2E8F0",
   },
   playButton: {
-    backgroundColor: "#2ecc71", // Yeşil tonu
-  },
-  surrenderButton: {
-    backgroundColor: "#e74c3c", // Kırmızı tonu
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   controlButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-    textShadowColor: "rgba(0,0,0,0.2)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.primary,
   },
   gameInfoContainer: {
     flexDirection: "row",

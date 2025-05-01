@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 0,
     paddingBottom: 40, // Alt padding'i artır
     minHeight: 300,
-    backgroundColor: Colors.lightBlue,
+    backgroundColor: "transparent",
   },
 });
 

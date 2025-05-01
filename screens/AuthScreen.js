@@ -197,6 +197,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   textButton: {
+    marginLeft: 3,
     color: Colors.secondary,
     fontWeight: "bold",
   },
