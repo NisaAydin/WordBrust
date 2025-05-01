@@ -68,6 +68,13 @@ class SocketService {
       console.warn("Socket bağlı değil, bağlanmadan önce çağrı yapıldı.");
     }
   }
+
+  onRemainingLettersUpdated(callback) {
+    if (this.socket) {
+      this.socket.off("remaining_letters_updated"); // Önlem için varsa eskiyi kaldır
+      this.socket.on("remaining_letters_updated", callback);
+    }
+  }
 }
 
 const socketService = new SocketService();

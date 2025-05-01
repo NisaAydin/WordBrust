@@ -28,13 +28,15 @@ const NewGame = ({ navigation }) => {
 
       if (result.success && result.game?.id) {
         const gameId = result.game.id;
+        const playerLetters = result.playerLetters || [];
+        const totalRemaining = result.totalRemaining || 0;
 
         // 1. Socket bağlantısını aç
         await socketService.connect(SERVER_URL);
 
         // 2. Board eventini HEMEN dinle
         socketService.onBoardInitialized((boardData) => {
-          console.log("📦 Gelen Board:", boardData);
+          // console.log("📦 Gelen Board:", boardData);
 
           setIsMatching(false);
 
@@ -42,6 +44,8 @@ const NewGame = ({ navigation }) => {
           navigation.navigate("GameScreen", {
             gameId: gameId,
             board: boardData,
+            playerLetters,
+            totalRemaining,
           });
         });
 

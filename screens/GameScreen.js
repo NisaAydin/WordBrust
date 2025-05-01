@@ -14,46 +14,104 @@ import { Colors } from "../constants/Colors";
 import CardComponent from "../components/atoms/CardComponent";
 import socket from "../services/SocketService";
 import { useFocusEffect } from "@react-navigation/native";
+import { useEffect } from "react";
 import { useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 
-// Hücre boyutu ayarlanıyor
 const CELL_SIZE = Dimensions.get("window").width / 15 - 3;
 const LETTER_SIZE = Dimensions.get("window").width / 10 - 4;
 const BOARD_SIZE = 15;
 
 const GameScreen = ({ route }) => {
-  const { gameId, board: initialBoard, playerLetters } = route.params;
+  const {
+    gameId,
+    board: initialBoard,
+    playerLetters,
+    totalRemaining,
+  } = route.params;
+
+  const getLetterPoints = (letter) => {
+    const pointsMap = {
+      A: 1,
+      B: 3,
+      C: 4,
+      Ç: 4,
+      D: 3,
+      E: 1,
+      F: 7,
+      G: 5,
+      Ğ: 8,
+      H: 5,
+      I: 2,
+      İ: 1,
+      J: 10,
+      K: 1,
+      L: 1,
+      M: 2,
+      N: 1,
+      O: 1,
+      Ö: 7,
+      P: 5,
+      R: 1,
+      S: 2,
+      Ş: 4,
+      T: 1,
+      U: 2,
+      Ü: 3,
+      V: 7,
+      Y: 3,
+      Z: 4,
+      "*": 0,
+    };
+    return pointsMap[letter] || 0;
+  };
+
   const [board, setBoard] = useState(initialBoard);
   const [selectedCell, setSelectedCell] = useState(null);
   const [selectedLetter, setSelectedLetter] = useState(null);
   const [letters, setLetters] = useState(
-    playerLetters || ["A", "B", "C", "D", "E", "F", "G"]
-  ); // Örnek harfler
+    (playerLetters || []).map((l) => ({
+      letter: l.letter,
+      score: getLetterPoints(l.letter),
+    }))
+  );
+  const [remainingLetters, setRemainingLetters] = useState(totalRemaining || 0);
 
   useFocusEffect(
     useCallback(() => {
       return () => {
-        // Sayfa odaktan çıkınca socketten ayrıl
         socket.leaveGameRoom(gameId);
       };
     }, [gameId])
   );
 
-  // Veriyi 15x15 matrisine dönüştürme fonksiyonu
+  useEffect(() => {
+    // Kalan harf sayısı güncellemesini dinle
+    const handleRemainingLetters = ({ totalRemaining }) => {
+      console.log("📦 GameScreen içinde gelen harf sayısı:", totalRemaining);
+      setRemainingLetters(totalRemaining);
+    };
+
+    socket.onRemainingLettersUpdated(handleRemainingLetters);
+
+    // GameScreen açıldığında güvenli şekilde tekrar odaya katıl
+    socket.joinGameRoom(gameId);
+
+    return () => {
+      socket.socket?.off("remaining_letters_updated", handleRemainingLetters);
+    };
+  }, []);
+
   const createGrid = (board) => {
     const grid = [];
     let row = [];
-
     for (let i = 0; i < board.length; i++) {
       row.push(board[i]);
-
       if (row.length === BOARD_SIZE) {
         grid.push(row);
         row = [];
       }
     }
-
     if (row.length > 0 && row.length < BOARD_SIZE) {
       const remainingCells = BOARD_SIZE - row.length;
       for (let i = 0; i < remainingCells; i++) {
@@ -68,37 +126,33 @@ const GameScreen = ({ route }) => {
       }
       grid.push(row);
     }
-
     return grid;
   };
 
   const handleCellPress = (cell) => {
     if (selectedLetter) {
-      // Eğer harf rafından harf seçiliyse tahtaya yerleştir
       if (!cell.letter) {
         const newBoard = board.map((c) => {
           if (c.row === cell.row && c.col === cell.col) {
-            return { ...c, letter: selectedLetter };
+            return { ...c, letter: selectedLetter.letter };
           }
           return c;
         });
         setBoard(newBoard);
 
-        // Harfi raftan kaldır
-        const letterIndex = letters.indexOf(selectedLetter);
-        if (letterIndex !== -1) {
-          const newLetters = [...letters];
-          newLetters.splice(letterIndex, 1);
-          setLetters(newLetters);
+        const index = letters.findIndex(
+          (l) => l.letter === selectedLetter.letter
+        );
+        if (index !== -1) {
+          const updatedLetters = [...letters];
+          updatedLetters.splice(index, 1);
+          setLetters(updatedLetters);
         }
-
         setSelectedLetter(null);
       }
     } else if (cell.letter) {
-      // Eğer hücrede harf varsa seçili yap
       setSelectedCell(cell);
     } else if (selectedCell) {
-      // Boş hücreye basıldı ve seçili harf varsa taşı
       const newBoard = board.map((c) => {
         if (c.row === selectedCell.row && c.col === selectedCell.col) {
           return { ...c, letter: null };
@@ -113,15 +167,14 @@ const GameScreen = ({ route }) => {
     }
   };
 
-  const handleLetterPress = (letter) => {
-    setSelectedLetter(letter);
-    setSelectedCell(null); // Tahtadaki seçimi iptal et
+  const handleLetterPress = (letterObj) => {
+    setSelectedLetter(letterObj);
+    setSelectedCell(null);
   };
 
   const renderCell = (cell) => {
     const isSelected =
       selectedCell?.row === cell.row && selectedCell?.col === cell.col;
-
     let cellStyle = [styles.cell];
     if (isSelected) cellStyle.push(styles.selectedCell);
     if (cell.word_multiplier === 3) cellStyle.push(styles.tripleWord);
@@ -155,63 +208,25 @@ const GameScreen = ({ route }) => {
     );
   };
 
-  const renderLetter = (letter, index) => {
-    const isSelected = selectedLetter === letter;
-
+  const renderLetter = (letterObj, index) => {
+    const isSelected = selectedLetter?.letter === letterObj.letter;
     return (
       <TouchableOpacity
         key={index}
         style={[styles.letterTile, isSelected && styles.selectedLetterTile]}
-        onPress={() => handleLetterPress(letter)}
+        onPress={() => handleLetterPress(letterObj)}
       >
-        <Text style={styles.letterTileText}>{letter}</Text>
-        <Text style={styles.letterTilePoints}>{getLetterPoints(letter)}</Text>
+        <Text style={styles.letterTileText}>{letterObj.letter}</Text>
+        <Text style={styles.letterTilePoints}>{letterObj.score}</Text>
       </TouchableOpacity>
     );
-  };
-
-  // Harflerin puanlarını döndüren yardımcı fonksiyon
-  const getLetterPoints = (letter) => {
-    const pointsMap = {
-      A: 1,
-      E: 1,
-      İ: 1,
-      I: 1,
-      O: 1,
-      U: 1,
-      Ü: 1,
-      B: 3,
-      C: 4,
-      Ç: 4,
-      D: 3,
-      F: 7,
-      G: 5,
-      Ğ: 8,
-      H: 5,
-      J: 10,
-      K: 1,
-      L: 1,
-      M: 2,
-      N: 1,
-      P: 5,
-      R: 1,
-      S: 2,
-      Ş: 4,
-      T: 1,
-      V: 7,
-      Y: 3,
-      Z: 4,
-    };
-    return pointsMap[letter] || 0;
   };
 
   const gridData = createGrid(board);
 
   return (
     <View style={styles.container}>
-      {/* Modern Oyun Bilgi Çubuğu */}
       <View style={styles.gameInfoContainer}>
-        {/* Oyuncu Bilgisi */}
         <View style={styles.playerInfoWrapper}>
           <View style={styles.playerBadge}>
             <Text style={styles.playerName} numberOfLines={1}>
@@ -222,10 +237,9 @@ const GameScreen = ({ route }) => {
           <View style={[styles.turnIndicator, styles.activePlayer]} />
         </View>
 
-        {/* Orta Bilgi */}
         <View style={styles.centerInfo}>
           <View style={styles.remainingLettersBadge}>
-            <Text style={styles.remainingLettersText}>87</Text>
+            <Text style={styles.remainingLettersText}>{remainingLetters}</Text>
             <Text style={styles.remainingLettersLabel}>KALAN</Text>
           </View>
           <View style={styles.timerBadge}>
@@ -233,7 +247,6 @@ const GameScreen = ({ route }) => {
           </View>
         </View>
 
-        {/* Rakip Bilgisi */}
         <View style={styles.playerInfoWrapper}>
           <View style={styles.playerBadge}>
             <Text style={styles.playerName} numberOfLines={1}>
@@ -245,7 +258,6 @@ const GameScreen = ({ route }) => {
         </View>
       </View>
 
-      {/* Oyun Tahtası */}
       <View style={styles.board}>
         {gridData.map((row, rowIndex) => (
           <View style={styles.row} key={rowIndex}>
@@ -254,7 +266,6 @@ const GameScreen = ({ route }) => {
         ))}
       </View>
 
-      {/* Seçili Bilgiler */}
       {selectedCell && (
         <View style={styles.selectedInfo}>
           <Text>Seçili: {selectedCell.letter}</Text>
@@ -263,8 +274,6 @@ const GameScreen = ({ route }) => {
           </Text>
         </View>
       )}
-
-      {/* Harf Rafı */}
 
       <CardComponent isOpposite={true}>
         <View style={styles.letterRackContainer}>
@@ -277,9 +286,6 @@ const GameScreen = ({ route }) => {
           </ScrollView>
         </View>
 
-        {/* Oyun Kontrolleri */}
-
-        {/* Kontrol Butonları - Yeni Tasarım */}
         <View style={styles.controlButtons}>
           <TouchableOpacity style={styles.controlButton}>
             <Ionicons name="pause" size={24} color={Colors.primary} />
@@ -307,6 +313,7 @@ const GameScreen = ({ route }) => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
