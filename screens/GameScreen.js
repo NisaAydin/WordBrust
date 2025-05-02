@@ -17,6 +17,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useEffect } from "react";
 import { useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const CELL_SIZE = Dimensions.get("window").width / 15 - 3;
 const LETTER_SIZE = Dimensions.get("window").width / 10 - 4;
@@ -69,6 +70,10 @@ const GameScreen = ({ route }) => {
   const [board, setBoard] = useState(initialBoard);
   const [selectedCell, setSelectedCell] = useState(null);
   const [selectedLetter, setSelectedLetter] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  useEffect(() => {
+    AsyncStorage.getItem("userId").then((id) => setCurrentUserId(parseInt(id)));
+  }, []);
 
   const [letters, setLetters] = useState(
     (playerLetters || []).map((l) => ({
@@ -94,12 +99,13 @@ const GameScreen = ({ route }) => {
 
     const handleInitialLetters = ({ playerId, letters: incomingLetters }) => {
       console.log("✉️ Gelen harfler:", incomingLetters);
-      setLetters(
-        incomingLetters.map((l) => ({
-          letter: l.letter,
-          score: getLetterPoints(l.letter),
-        }))
-      );
+      if (playerId !== currentUserId) return;
+        setLetters(
+          incomingLetters.map((l) => ({
+            letter: l.letter,
+            score: getLetterPoints(l.letter),
+          }))
+        );
     };
 
     const handleBoardUpdated = (newBoard) => {
