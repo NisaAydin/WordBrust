@@ -40,6 +40,7 @@ export const AuthService = {
           "userData",
           JSON.stringify(response.data.user)
         );
+        await AsyncStorage.setItem("userId", response.data.user.id.toString()); // 👈 Eklenen satır
       }
 
       return response;
@@ -68,6 +69,7 @@ export const AuthService = {
           "userData",
           JSON.stringify(response.data.user)
         );
+        await AsyncStorage.setItem("userId", response.data.user.id.toString()); // 👈 Eklenen satır
       }
 
       return response.data;

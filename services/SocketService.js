@@ -33,11 +33,21 @@ class SocketService {
     });
   }
 
-  joinGameRoom(gameId) {
+  joinGameRoom(gameId, playerId) {
+    const emitJoin = () => {
+      console.log("📤 join_game_room emit gönderiliyor:", { gameId, playerId });
+      this.socket.emit("join_game_room", { gameId, playerId });
+    };
+
     if (this.socket && this.socket.connected) {
-      this.socket.emit("join_game_room", { gameId });
+      emitJoin();
+    } else if (this.socket) {
+      this.socket.once("connect", () => {
+        console.log("✅ Socket bağlandıktan sonra join emit atılıyor.");
+        emitJoin();
+      });
     } else {
-      console.warn("Socket not connected. Cannot join room.");
+      console.error("❌ Socket nesnesi yok.");
     }
   }
 
@@ -46,6 +56,18 @@ class SocketService {
       // Önce eski dinleyiciyi kaldır (önlem için)
       this.socket.off("board_initialized");
       this.socket.on("board_initialized", callback);
+    }
+  }
+
+  onInitialLetters(callback) {
+    if (this.socket) {
+      this.socket.on("initial_letters", callback);
+    }
+  }
+
+  onRemainingLettersUpdated(callback) {
+    if (this.socket) {
+      this.socket.on("remaining_letters_updated", callback);
     }
   }
 

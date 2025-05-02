@@ -13,6 +13,7 @@ import { Colors } from "../constants/Colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import socketService from "../services/SocketService";
 import { GameService } from "../services/GameService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SERVER_URL = "https://wordbrust-server.onrender.com";
 
@@ -22,36 +23,94 @@ const NewGame = ({ navigation }) => {
 
   const handleFindMatch = async (gameType) => {
     try {
+      console.log("🔍 Eşleşme başlatılıyor...");
       setIsMatching(true);
       setCurrentGameType(gameType);
 
       const result = await GameService.findOpponent(gameType);
+      console.log("✅ GameService cevabı:", result);
 
       if (result.success && result.game?.id) {
         const gameId = result.game.id;
-        const playerLetters = result.playerLetters || [];
-        const totalRemaining = result.totalRemaining || 0;
+        const userId = await AsyncStorage.getItem("userId");
+        console.log("📌 Kullanıcı ID:", userId);
+        console.log("🎮 Game ID:", gameId);
 
         await socketService.connect(SERVER_URL);
+        console.log("🔌 Socket bağlantısı kuruldu");
 
+        let board = null;
+        let letters = null;
+        let totalRemaining = null;
+        let navigated = false;
+
+        // ✅ 1. Dinleyicileri önce kur
         socketService.onBoardInitialized((boardData) => {
-          console.log("📦 Gelen Board:", boardData);
-
-          setIsMatching(false);
-          navigation.navigate("GameScreen", {
-            gameId: gameId,
-            board: boardData,
-            playerLetters,
-            totalRemaining,
-          });
+          console.log("📦 Board alındı");
+          board = boardData;
+          tryNavigate();
         });
 
-        socketService.joinGameRoom(gameId);
+        socketService.onInitialLetters(
+          ({ playerId, letters: incomingLetters }) => {
+            console.log(
+              "✉️ Harf eventi geldi. playerId:",
+              playerId,
+              "→ bizimki:",
+              userId
+            );
+            if (parseInt(userId) === playerId) {
+              console.log("✅ Bu harfler bize ait:", incomingLetters);
+              letters = incomingLetters;
+              tryNavigate();
+            } else {
+              console.log("❌ Bu harfler başka oyuncuya ait, atlanıyor.");
+            }
+          }
+        );
+
+        socketService.onRemainingLettersUpdated(({ totalRemaining: count }) => {
+          console.log("🔢 Kalan harf sayısı geldi:", count);
+          totalRemaining = count;
+          tryNavigate();
+        });
+
+        // ✅ 2. En son join emit gönder
+        console.log("➡️ joinGameRoom emit atılıyor...");
+        socketService.joinGameRoom(gameId, parseInt(userId));
+
+        // ✅ 3. Hepsi gelince yönlendir
+        const tryNavigate = () => {
+          console.log(
+            "🧪 tryNavigate kontrol → board:",
+            !!board,
+            "| letters:",
+            !!letters,
+            "| remaining:",
+            totalRemaining
+          );
+
+          if (!navigated && board && letters && totalRemaining !== null) {
+            navigated = true;
+            console.log(
+              "🚀 Tüm veriler alındı, GameScreen'e yönlendiriliyor..."
+            );
+            setIsMatching(false);
+            navigation.navigate("GameScreen", {
+              gameId,
+              board,
+              playerLetters: letters,
+              totalRemaining,
+            });
+          }
+        };
       } else {
+        console.warn("❌ Game ID yok, eşleşme başarısız.");
         Alert.alert("Hata", "Oyun başlatılamadı");
         setIsMatching(false);
       }
     } catch (error) {
+      console.error("💥 Eşleşme sırasında hata:", error);
       Alert.alert("Hata", error.message || "Oyun aranırken hata oluştu");
       setIsMatching(false);
     }

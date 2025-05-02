@@ -29,8 +29,8 @@ export const GameService = {
           success: true,
           message: response.data.message || "Oyun başlatıldı",
           game: response.data.game,
-          playerLetters: response.data.playerLetters || [],
-          totalRemaining: response.data.totalRemaining || 0,
+          // playerLetters: response.data.playerLetters || [],
+          // totalRemaining: response.data.totalRemaining || 0,
         };
       }
 

@@ -69,6 +69,7 @@ const GameScreen = ({ route }) => {
   const [board, setBoard] = useState(initialBoard);
   const [selectedCell, setSelectedCell] = useState(null);
   const [selectedLetter, setSelectedLetter] = useState(null);
+
   const [letters, setLetters] = useState(
     (playerLetters || []).map((l) => ({
       letter: l.letter,
@@ -86,21 +87,38 @@ const GameScreen = ({ route }) => {
   );
 
   useEffect(() => {
-    // Kalan harf sayısı güncellemesini dinle
     const handleRemainingLetters = ({ totalRemaining }) => {
-      console.log("📦 GameScreen içinde gelen harf sayısı:", totalRemaining);
+      console.log("📦 Güncel kalan harf sayısı:", totalRemaining);
       setRemainingLetters(totalRemaining);
     };
 
+    const handleInitialLetters = ({ playerId, letters: incomingLetters }) => {
+      console.log("✉️ Gelen harfler:", incomingLetters);
+      setLetters(
+        incomingLetters.map((l) => ({
+          letter: l.letter,
+          score: getLetterPoints(l.letter),
+        }))
+      );
+    };
+
+    const handleBoardUpdated = (newBoard) => {
+      console.log("🔄 Yeni board geldi");
+      setBoard(newBoard);
+    };
+
+    // Listeleyicileri ekle
     socket.onRemainingLettersUpdated(handleRemainingLetters);
+    socket.onInitialLetters(handleInitialLetters);
+    socket.onBoardInitialized(handleBoardUpdated);
 
-    // GameScreen açıldığında güvenli şekilde tekrar odaya katıl
-    socket.joinGameRoom(gameId);
-
+    // Temizlik
     return () => {
       socket.socket?.off("remaining_letters_updated", handleRemainingLetters);
+      socket.socket?.off("initial_letters", handleInitialLetters);
+      socket.socket?.off("board_initialized", handleBoardUpdated);
     };
-  }, []);
+  }, [gameId]);
 
   const createGrid = (board) => {
     const grid = [];
