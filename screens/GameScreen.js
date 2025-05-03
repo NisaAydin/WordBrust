@@ -26,7 +26,7 @@ const CELL_SIZE = Dimensions.get("window").width / 15 - 3;
 const LETTER_SIZE = Dimensions.get("window").width / 10 - 4;
 const BOARD_SIZE = 15;
 
-const GameScreen = ({ route }) => {
+const GameScreen = ({ route, navigation }) => {
   const { gameId } = route.params;
   const [gameMode, setGameMode] = useState(null);
 
@@ -74,6 +74,9 @@ const GameScreen = ({ route }) => {
   const [players, setPlayers] = useState([]);
   const [remainingLetters, setRemainingLetters] = useState(0);
   const [isMyTurn, setIsMyTurn] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [winnerInfo, setWinnerInfo] = useState(null);
+  const [gameError, setGameError] = useState(null);
 
   const sortBoard = (board) => {
     return board.sort((a, b) => {
@@ -110,13 +113,33 @@ const GameScreen = ({ route }) => {
       setPlayers(response.players);
       setLetters(
         response.letters.map((l, index) => ({
-          id: `${l.letter}-${index}-${Date.now()}`, // benzersiz ID
+          id: `${l.letter}-${index}-${Date.now()}`,
           letter: l.letter,
           score: getLetterPoints(l.letter),
         }))
       );
-
       setIsMyTurn(response.isMyTurn);
+
+      // 🛑 Oyun bitmiş mi kontrolü
+      if (response.game_status === "finished") {
+        setIsGameOver(true);
+
+        const winner = response.players.find(
+          (p) => p.id === response.winner_id
+        );
+        setWinnerInfo({
+          winnerName: winner?.username || "Berabere",
+          winnerScore: response.winner_score,
+        });
+
+        if (currentUserId !== response.winner_id) {
+          setGameError("Süre dolduğu için oyunu kaybettiniz.");
+        }
+
+        setTimeout(() => {
+          navigation.navigate("TabNavigator", { screen: "Home" }); // veya ana ekranın ismi neyse
+        }, 5000);
+      }
     };
 
     (async () => {
@@ -193,31 +216,83 @@ const GameScreen = ({ route }) => {
       const row = placedLetters[0].row;
       const col = placedLetters[0].col;
 
-      const fullWordCells = board.filter((cell) => {
-        if (direction === "horizontal" && cell.row === row && cell.letter)
-          return true;
-        if (direction === "vertical" && cell.col === col && cell.letter)
-          return true;
-        return false;
-      });
-
-      const sortedCells = fullWordCells.sort((a, b) =>
+      const sortedPlaced = [...placedLetters].sort((a, b) =>
         direction === "horizontal" ? a.col - b.col : a.row - b.row
       );
 
-      const word = sortedCells.map((c) => c.letter).join("");
-      const score = placedLetters.reduce(
-        (sum, l) => sum + getLetterPoints(l.letter),
-        0
-      );
-      const startRow = sortedCells[0].row;
-      const startCol = sortedCells[0].col;
+      const fullWordCells = [];
+      let startIdx =
+        direction === "horizontal" ? sortedPlaced[0].col : sortedPlaced[0].row;
+      let idx = startIdx;
 
-      // 👉 Hamle API isteği
+      while (true) {
+        const cell = board.find((c) =>
+          direction === "horizontal"
+            ? c.row === row && c.col === idx
+            : c.col === col && c.row === idx
+        );
+
+        if (!cell || !cell.letter) break;
+        fullWordCells.push(cell);
+        idx++;
+      }
+
+      const word = fullWordCells.map((c) => c.letter).join("");
+      if (word.length < placedLetters.length) {
+        alert("Yerleştirilen harfler mevcut harflerle bağlantı kurmuyor.");
+        return;
+      }
+
+      const crossWords = [];
+      for (const cell of placedLetters) {
+        const isHorizontal = direction === "horizontal";
+        const fixed = isHorizontal ? cell.row : cell.col;
+        const variable = isHorizontal ? cell.col : cell.row;
+        let tempIdx = variable;
+        const crossWordCells = [];
+
+        while (true) {
+          tempIdx--;
+          const c = board.find(
+            (b) =>
+              (isHorizontal
+                ? b.col === tempIdx && b.row === fixed
+                : b.row === tempIdx && b.col === fixed) && b.letter
+          );
+          if (!c) break;
+          crossWordCells.unshift(c);
+        }
+
+        crossWordCells.push(cell);
+
+        tempIdx = variable;
+        while (true) {
+          tempIdx++;
+          const c = board.find(
+            (b) =>
+              (isHorizontal
+                ? b.col === tempIdx && b.row === fixed
+                : b.row === tempIdx && b.col === fixed) && b.letter
+          );
+          if (!c) break;
+          crossWordCells.push(c);
+        }
+
+        if (crossWordCells.length > 1) {
+          const formed = crossWordCells.map((c) => c.letter).join("");
+          crossWords.push(formed);
+        }
+      }
+
+      const allWordsToValidate = [word, ...crossWords];
+      console.log("🧠 Oluşan kelimeler:", allWordsToValidate);
+
+      const startRow = sortedPlaced[0].row;
+      const startCol = sortedPlaced[0].col;
+
       const response = await MoveService.sendMove(gameId, {
         playerId: currentUserId,
         word,
-        score,
         startRow,
         startCol,
         direction,
@@ -227,8 +302,6 @@ const GameScreen = ({ route }) => {
           letter,
         })),
       });
-
-      console.log("✅ Hamle sonucu:", response);
 
       setSelectedLetter(null);
       setSelectedCell(null);
@@ -247,8 +320,38 @@ const GameScreen = ({ route }) => {
       }));
 
       setLetters([...updatedLetters, ...newLetterObjs]);
+
+      if (response.result?.updatedScores) {
+        setPlayers((prev) =>
+          prev.map((p) => {
+            if (p.id === currentUserId) {
+              return {
+                ...p,
+                score: response.result.updatedScores.player1_score,
+              };
+            } else {
+              return {
+                ...p,
+                score: response.result.updatedScores.player2_score,
+              };
+            }
+          })
+        );
+      }
     } catch (err) {
-      alert("Hamle gönderilemedi: " + err.message);
+      if (err.message === "timeout_game_over") {
+        setGameError("Süre dolduğu için oyunu kaybettiniz.");
+      } else if (err.message === "Game is already finished.") {
+        alert("Oyun zaten bitmiş, hamle yapılamaz.");
+      } else if (err.message.startsWith("Geçersiz kelime")) {
+        alert(err.message); // örn: "Geçersiz kelime bulundu: kitap"
+      } else if (err.message === "Yeni harfler mevcut harflerle temas etmeli.") {
+        alert("Yeni harfler tahtadaki mevcut harflerle temas etmeli.");
+      } else if (err.message === "İlk hamlede kelime tahtanın ortasından geçmeli (7,7)") {
+        alert("İlk hamlede kelime tahtanın ortasından (7,7) geçmelidir.");
+      } else {
+        alert("Hamle gönderilemedi: " + err.message);
+      }
     }
   };
 
@@ -497,6 +600,57 @@ const GameScreen = ({ route }) => {
           </TouchableOpacity>
         </View>
       </CardComponent>
+      {gameError && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.65)",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 9999,
+            paddingHorizontal: 30,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              padding: 24,
+              borderRadius: 20,
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "600",
+                color: Colors.primary,
+                textAlign: "center",
+              }}
+            >
+              {gameError}
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setGameError(null);
+                navigation.navigate("TabNavigator", { screen: "Home" });
+              }}
+              style={{
+                marginTop: 20,
+                backgroundColor: Colors.primary,
+                paddingVertical: 10,
+                paddingHorizontal: 20,
+                borderRadius: 10,
+              }}
+            >
+              <Text style={{ color: "white", fontWeight: "600" }}>Tamam</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
