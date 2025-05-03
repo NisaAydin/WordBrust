@@ -1,58 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import OnboardingScreen from "./screens/OnboardingScreen";
 import AuthScreen from "./screens/AuthScreen";
 import TabNavigator from "./navigation/TabNavigator";
 import NewGame from "./screens/NewGame";
 import { Colors } from "./constants/Colors";
-import { AuthProvider, useAuth } from "./services/AuthContext"; // useAuth ekledik
+import { AuthProvider, useAuth } from "./services/AuthContext";
 import GameScreen from "./screens/GameScreen";
 import ActiveGames from "./screens/ActiveGames";
-import { StatusBar } from "react-native";
 import FinishedGames from "./screens/FinishedGames";
+import { StatusBar } from "react-native";
 
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
-  const { isAuthenticated } = useAuth(); // Auth durumunu kontrol ediyoruz
-  const [isFirstLaunch, setIsFirstLaunch] = useState(null);
-
-  useEffect(() => {
-    const checkFirstLaunch = async () => {
-      try {
-        const firstLaunch = await AsyncStorage.getItem("isFirstLaunch");
-        if (firstLaunch === null) {
-          setIsFirstLaunch(true);
-          await AsyncStorage.setItem("isFirstLaunch", "false");
-        } else {
-          setIsFirstLaunch(false);
-        }
-      } catch (error) {
-        console.log("Error checking first launch", error);
-        setIsFirstLaunch(false);
-      }
-    };
-
-    checkFirstLaunch();
-  }, []);
-
-  if (isFirstLaunch === null) {
-    return null;
-  }
+  const { isAuthenticated } = useAuth();
 
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
       <Stack.Navigator>
-        {isFirstLaunch && (
-          <Stack.Screen
-            name="OnboardingScreen"
-            component={OnboardingScreen}
-            options={{ headerShown: false }}
-          />
-        )}
         {!isAuthenticated ? (
           <Stack.Screen
             name="AuthScreen"

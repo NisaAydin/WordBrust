@@ -6,8 +6,6 @@ import {
   TouchableOpacity,
   Dimensions,
   ScrollView,
-  PanResponder,
-  Animated,
 } from "react-native";
 
 import { Colors } from "../constants/Colors";
@@ -89,14 +87,6 @@ const GameScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     AsyncStorage.getItem("userId").then((id) => setCurrentUserId(parseInt(id)));
-  }, []);
-
-  useEffect(() => {
-    const loadGameMode = async () => {
-      const stored = await AsyncStorage.getItem("lastGameMode");
-      setGameMode(stored || "Bilinmiyor");
-    };
-    loadGameMode();
   }, []);
 
   useEffect(() => {
@@ -345,9 +335,13 @@ const GameScreen = ({ route, navigation }) => {
         alert("Oyun zaten bitmiş, hamle yapılamaz.");
       } else if (err.message.startsWith("Geçersiz kelime")) {
         alert(err.message); // örn: "Geçersiz kelime bulundu: kitap"
-      } else if (err.message === "Yeni harfler mevcut harflerle temas etmeli.") {
+      } else if (
+        err.message === "Yeni harfler mevcut harflerle temas etmeli."
+      ) {
         alert("Yeni harfler tahtadaki mevcut harflerle temas etmeli.");
-      } else if (err.message === "İlk hamlede kelime tahtanın ortasından geçmeli (7,7)") {
+      } else if (
+        err.message === "İlk hamlede kelime tahtanın ortasından geçmeli (7,7)"
+      ) {
         alert("İlk hamlede kelime tahtanın ortasından (7,7) geçmelidir.");
       } else {
         alert("Hamle gönderilemedi: " + err.message);
@@ -514,9 +508,6 @@ const GameScreen = ({ route, navigation }) => {
           <View style={styles.remainingLettersBadge}>
             <Text style={styles.remainingLettersText}>{remainingLetters}</Text>
             <Text style={styles.remainingLettersLabel}>KALAN</Text>
-          </View>
-          <View style={styles.timerBadge}>
-            <Text style={styles.timerText}> Mod: {gameMode}</Text>
           </View>
         </View>
 
@@ -747,12 +738,7 @@ const styles = StyleSheet.create({
   tripleLetter: {
     backgroundColor: "#1abc9c",
   },
-  bonusCell: {
-    backgroundColor: "#9b59b6",
-  },
-  mineCell: {
-    backgroundColor: "#9a8d7d",
-  },
+
   selectedInfo: {
     marginTop: 20,
     padding: 15,

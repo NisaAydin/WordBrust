@@ -61,16 +61,16 @@ const AuthScreen = ({ navigation }) => {
     if (selectedIndex === 0) {
       return (
         <>
-          <Text style={styles.headerText}>Let's Sign you in.</Text>
-          <Text style={styles.subheaderText}>Welcome back.</Text>
+          <Text style={styles.headerText}>Giriş Yap</Text>
+          <Text style={styles.subheaderText}>Tekrar hoş geldin.</Text>
         </>
       );
     } else {
       return (
         <>
-          <Text style={styles.headerText}>Register</Text>
+          <Text style={styles.headerText}>Kayıt Ol</Text>
           <Text style={styles.subheaderText}>
-            Create a new account to get started.
+            Başlamak için yeni bir hesap oluştur.
           </Text>
         </>
       );
@@ -89,7 +89,7 @@ const AuthScreen = ({ navigation }) => {
 
           <View style={styles.segmentedControlContainer}>
             <SegmentedControlTab
-              values={["Sign In", "Register"]}
+              values={["Giriş Yap", "Kayıt Ol"]}
               selectedIndex={selectedIndex}
               onTabPress={(index) => setSelectedIndex(index)}
               tabsContainerStyle={styles.tabsContainer}
@@ -118,14 +118,14 @@ const AuthScreen = ({ navigation }) => {
           <View style={styles.footerContainer}>
             <Text style={styles.footerText}>
               {selectedIndex === 0
-                ? "Don't have an account?"
-                : "Already have an account?"}
+                ? "Hesabın yok mu?"
+                : "Zaten bir hesabın var mı?"}
             </Text>
             <TouchableOpacity
               onPress={() => setSelectedIndex(selectedIndex === 0 ? 1 : 0)}
             >
               <Text style={styles.textButton}>
-                {selectedIndex === 0 ? "Register" : "Sign In"}
+                {selectedIndex === 0 ? "Kayıt Ol" : "Giriş Yap"}
               </Text>
             </TouchableOpacity>
           </View>

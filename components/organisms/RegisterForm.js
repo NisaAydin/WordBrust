@@ -24,29 +24,29 @@ const RegisterForm = ({ onRegister }) => {
   return (
     <View style={styles.formContainer}>
       <CustomInput
-        placeholder="Enter your user name"
+        placeholder="Kullanıcı adınızı girin"
         value={username}
         onChangeText={setUsername}
       />
 
       <CustomInput
-        placeholder="Enter your email"
+        placeholder="E-posta adresinizi girin"
         value={email}
         onChangeText={setEmail}
       />
       <CustomInput
-        placeholder="Enter your password"
+        placeholder="Şifrenizi girin"
         value={password}
         onChangeText={setPassword}
         secureTextEntry={true}
       />
       <CustomInput
-        placeholder="Confirm your password"
+        placeholder="Şifrenizi tekrar girin"
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry={true}
       />
-      <CustomButton title="Register" onPress={handleRegister} />
+      <CustomButton title="Kayıt Ol" onPress={handleRegister} />
     </View>
   );
 };

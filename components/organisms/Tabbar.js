@@ -27,7 +27,12 @@ const TabBar = ({ state, descriptors, navigation }) => {
       <View style={styles.tabBarWrapper}>
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
-          const label = options.tabBarLabel || options.title || route.name;
+          const labelMap = {
+            Home: "Ana Sayfa",
+            MyGames: "Oyunlarım",
+            Profile: "Profilim",
+          };
+          const label = labelMap[route.name] || route.name;
           const isFocused = state.index === index;
 
           const onPress = () => {

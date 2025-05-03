@@ -128,7 +128,7 @@ const Profile = () => {
           color="white"
           style={styles.logoutIcon}
         />
-        <Text style={styles.logoutButtonText}>LOG OUT</Text>
+        <Text style={styles.logoutButtonText}>ÇIKIŞ YAP</Text>
       </TouchableOpacity>
     </LinearGradient>
   );

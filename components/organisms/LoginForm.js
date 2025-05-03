@@ -25,13 +25,13 @@ const LoginForm = ({ onLogin }) => {
   return (
     <View style={styles.formContainer}>
       <CustomInput
-        placeholder="Enter your user name"
+        placeholder="Kullanıcı adınızı girin"
         value={username}
         onChangeText={setUsername}
       />
 
       <CustomInput
-        placeholder="Enter your password"
+        placeholder="Şifrenizi girin"
         value={password}
         onChangeText={setPassword}
         secureTextEntry={true}
@@ -48,9 +48,9 @@ const LoginForm = ({ onLogin }) => {
           }}
           style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
         />
-        <Text style={styles.rememberMeText}>Remember Me</Text>
+        <Text style={styles.rememberMeText}>Beni hatırla</Text>
       </View>
-      <CustomButton title="Sign In" onPress={handleSignIn} />
+      <CustomButton title="Giriş Yap" onPress={handleSignIn} />
     </View>
   );
 };
