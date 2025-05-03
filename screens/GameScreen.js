@@ -19,6 +19,7 @@ import { useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GameService } from "../services/GameService";
+import { MoveService } from "../services/MoveService"; // dosyanın en üstüne ekle
 
 const SERVER_URL = "https://wordbrust-server.onrender.com";
 const CELL_SIZE = Dimensions.get("window").width / 15 - 3;
@@ -73,6 +74,15 @@ const GameScreen = ({ route }) => {
   const [remainingLetters, setRemainingLetters] = useState(0);
   const [isMyTurn, setIsMyTurn] = useState(false);
 
+  const sortBoard = (board) => {
+    return board.sort((a, b) => {
+      if (a.row === b.row) {
+        return a.col - b.col;
+      }
+      return a.row - b.row;
+    });
+  };
+
   useEffect(() => {
     AsyncStorage.getItem("userId").then((id) => setCurrentUserId(parseInt(id)));
   }, []);
@@ -88,7 +98,8 @@ const GameScreen = ({ route }) => {
       const response = await GameService.joinGame(gameId);
       if (!mounted) return;
 
-      setBoard(response.board);
+      setBoard(sortBoard(response.board));
+
       setRemainingLetters(response.totalRemaining);
       setPlayers(response.players);
       setLetters(
@@ -132,13 +143,118 @@ const GameScreen = ({ route }) => {
     }
     return grid;
   };
+  const handlePlayMove = async () => {
+    try {
+      // 👇 Sadece kullanıcı tarafından yeni yerleştirilen harfler
+      const placedLetters = board.filter(
+        (cell) => cell.letter && cell.initial === false
+      );
+
+      if (placedLetters.length === 0) {
+        alert("En az 1 harf yerleştirmelisin");
+        return;
+      }
+
+      const sameRow = placedLetters.every(
+        (c) => c.row === placedLetters[0].row
+      );
+      const sameCol = placedLetters.every(
+        (c) => c.col === placedLetters[0].col
+      );
+
+      if (!sameRow && !sameCol) {
+        alert("Yeni harfler aynı satırda ya da sütunda olmalı");
+        return;
+      }
+
+      const direction = sameRow ? "horizontal" : "vertical";
+      const row = placedLetters[0].row;
+      const col = placedLetters[0].col;
+
+      const fullWordCells = board.filter((cell) => {
+        if (direction === "horizontal" && cell.row === row && cell.letter)
+          return true;
+        if (direction === "vertical" && cell.col === col && cell.letter)
+          return true;
+        return false;
+      });
+
+      const sortedCells = fullWordCells.sort((a, b) => {
+        return direction === "horizontal" ? a.col - b.col : a.row - b.row;
+      });
+
+      const word = sortedCells.map((c) => c.letter).join("");
+      const score = placedLetters.reduce(
+        (sum, l) => sum + getLetterPoints(l.letter),
+        0
+      );
+      const startRow = sortedCells[0].row;
+      const startCol = sortedCells[0].col;
+
+      const response = await MoveService.sendMove(gameId, {
+        playerId: currentUserId,
+        word,
+        score,
+        startRow,
+        startCol,
+        direction,
+        usedLetters: placedLetters.map(({ row, col, letter }) => ({
+          row,
+          col,
+          letter,
+        })),
+      });
+
+      console.log("✅ Hamle sonucu:", response);
+
+      // 🔄 Yeni verileri çek
+      const updated = await GameService.joinGame(gameId);
+
+      setBoard(sortBoard(updated.board));
+      setRemainingLetters(updated.totalRemaining);
+      setPlayers(updated.players);
+      setLetters(
+        updated.letters.map((l) => ({
+          letter: l.letter,
+          score: getLetterPoints(l.letter),
+        }))
+      );
+
+      setIsMyTurn(false);
+      setSelectedLetter(null);
+      setSelectedCell(null);
+    } catch (err) {
+      alert("Hamle gönderilemedi: " + err.message);
+    }
+  };
+
+  const handleUndoMove = () => {
+    const updatedBoard = board.map((cell) => {
+      if (cell.initial === false) {
+        return { ...cell, letter: null };
+      }
+      return cell;
+    });
+
+    const restoredLetters = board
+      .filter((cell) => cell.initial === false && cell.letter)
+      .map((cell) => ({
+        letter: cell.letter,
+        score: getLetterPoints(cell.letter),
+      }));
+
+    setBoard(updatedBoard);
+    setLetters([...letters, ...restoredLetters]);
+    setSelectedCell(null);
+    setSelectedLetter(null);
+  };
 
   const handleCellPress = (cell) => {
     if (selectedLetter) {
       if (!cell.letter) {
         const newBoard = board.map((c) => {
           if (c.row === cell.row && c.col === cell.col) {
-            return { ...c, letter: selectedLetter.letter };
+            return { ...c, letter: selectedLetter.letter, initial: false };
           }
           return c;
         });
@@ -187,6 +303,11 @@ const GameScreen = ({ route }) => {
     if (cell.letter_multiplier === 3) cellStyle.push(styles.tripleLetter);
     if (cell.bonus_type) cellStyle.push(styles.bonusCell);
     if (cell.mine_type) cellStyle.push(styles.mineCell);
+
+    // 💡 Harf yerleştirildi ama henüz kaydedilmedi (Oyna'ya basılmadıysa)
+    if (cell.letter && cell.initial === false) {
+      cellStyle.push(styles.placedLetterCell);
+    }
 
     return (
       <TouchableOpacity
@@ -247,7 +368,12 @@ const GameScreen = ({ route }) => {
             </Text>
             <Text style={styles.playerScore}>{me.score}</Text>
           </View>
-          <View style={[styles.turnIndicator, styles.activePlayer]} />
+          <View
+            style={[
+              styles.turnIndicator,
+              isMyTurn ? styles.activePlayer : null,
+            ]}
+          />
         </View>
 
         <View style={styles.centerInfo}>
@@ -267,7 +393,12 @@ const GameScreen = ({ route }) => {
             </Text>
             <Text style={styles.playerScore}>{opponent.score}</Text>
           </View>
-          <View style={styles.turnIndicator} />
+          <View
+            style={[
+              styles.turnIndicator,
+              !isMyTurn ? styles.activePlayer : null,
+            ]}
+          />
         </View>
       </View>
 
@@ -312,6 +443,7 @@ const GameScreen = ({ route }) => {
               !isMyTurn && { opacity: 0.4 }, // sırası değilse saydamlaştır
             ]}
             disabled={!isMyTurn} // sırası değilse tıklanamaz
+            onPress={handlePlayMove}
             // onPress={handlePlayMove} // Oyna butonuna basınca yapılacak işlem
           >
             <Ionicons name="play" size={24} color="white" />
@@ -320,7 +452,10 @@ const GameScreen = ({ route }) => {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.controlButton}>
+          <TouchableOpacity
+            style={styles.controlButton}
+            onPress={handleUndoMove}
+          >
             <Ionicons name="arrow-undo" size={24} color={Colors.primary} />
             <Text style={styles.controlButtonText}>Geri Al</Text>
           </TouchableOpacity>
@@ -341,6 +476,9 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
 
     backgroundColor: Colors.background,
+  },
+  placedLetterCell: {
+    backgroundColor: "#d1d5db", // açık gri ton
   },
   titleContainer: {
     marginHorizontal: 50,

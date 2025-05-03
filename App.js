@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from "./services/AuthContext"; // useAuth ekled
 import GameScreen from "./screens/GameScreen";
 import ActiveGames from "./screens/ActiveGames";
 import { StatusBar } from "react-native";
+import FinishedGames from "./screens/FinishedGames";
 
 const Stack = createStackNavigator();
 
@@ -92,10 +93,11 @@ const AppNavigator = () => {
                 headerStyle: {
                   backgroundColor: Colors.background,
                 },
-                headerTintColor: Colors.primary,
+                headerTintColor: "white",
                 headerTitleStyle: {
                   fontWeight: "bold",
                 },
+                headerBackTitle: "Back",
               }}
             />
             <Stack.Screen
@@ -103,6 +105,23 @@ const AppNavigator = () => {
               component={ActiveGames}
               options={{
                 title: "Aktif Oyunlarım",
+                headerShown: true,
+                headerTitleAlign: "center",
+                headerStyle: {
+                  backgroundColor: Colors.background,
+                },
+                headerTintColor: "white",
+                headerTitleStyle: {
+                  fontWeight: "bold",
+                },
+                headerBackTitle: "Back",
+              }}
+            />
+            <Stack.Screen
+              name="FinishedGames"
+              component={FinishedGames}
+              options={{
+                title: "Biten Oyunlarım",
                 headerShown: true,
                 headerTitleAlign: "center",
                 headerStyle: {

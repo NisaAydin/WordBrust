@@ -103,7 +103,7 @@ const HomeScreen = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.secondaryButton}
-            onPress={() => navigation.navigate("History")}
+            onPress={() => navigation.navigate("FinishedGames")}
           >
             <MaterialCommunityIcons
               name="history"
