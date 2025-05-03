@@ -5,7 +5,6 @@ class SocketService {
 
   async connect(serverUrl) {
     return new Promise((resolve, reject) => {
-      // Önce varsa eski bağlantıyı kapat
       if (this.socket) {
         this.socket.disconnect();
         this.socket = null;
@@ -18,84 +17,67 @@ class SocketService {
       });
 
       this.socket.on("connect", () => {
-        console.log("Socket connected:", this.socket.id);
+        console.log("✅ Socket connected:", this.socket.id);
         resolve(this.socket);
       });
 
       this.socket.on("connect_error", (error) => {
-        console.error("Socket connection error:", error);
+        console.error("❌ Socket connection error:", error);
         reject(error);
       });
 
       this.socket.on("disconnect", (reason) => {
-        console.log("Socket disconnected:", reason);
+        console.log("🔌 Socket disconnected:", reason);
       });
     });
   }
 
-  joinGameRoom(gameId, playerId) {
-    const emitJoin = () => {
-      console.log("📤 join_game_room emit gönderiliyor:", { gameId, playerId });
-      this.socket.emit("join_game_room", { gameId, playerId });
-    };
-
-    if (this.socket && this.socket.connected) {
-      emitJoin();
-    } else if (this.socket) {
-      this.socket.once("connect", () => {
-        console.log("✅ Socket bağlandıktan sonra join emit atılıyor.");
-        emitJoin();
-      });
-    } else {
-      console.error("❌ Socket nesnesi yok.");
+  joinGameRoom(gameId) {
+    if (!this.socket) {
+      console.error("❌ Socket not initialized.");
+      return;
     }
-  }
-
-  onBoardInitialized(callback) {
-    if (this.socket) {
-      // Önce eski dinleyiciyi kaldır (önlem için)
-      this.socket.off("board_initialized");
-      this.socket.on("board_initialized", callback);
-    }
-  }
-
-  onInitialLetters(callback) {
-    if (this.socket) {
-      this.socket.on("initial_letters", callback);
-    }
-  }
-
-  onRemainingLettersUpdated(callback) {
-    if (this.socket) {
-      this.socket.on("remaining_letters_updated", callback);
-    }
+    const payload = { gameId };
+    console.log("📤 Emitting join_game_room:", payload);
+    this.socket.emit("join_game_room", payload);
   }
 
   leaveGameRoom(gameId) {
     if (this.socket && this.socket.connected) {
       this.socket.emit("leave_game_room", { gameId });
-      console.log("Oda bırakıldı:", gameId);
+      console.log("🚪 Left room:", gameId);
     }
   }
 
-  joinGameRoomAndListenBoard(gameId, onBoardReady) {
-    if (this.socket && this.socket.connected) {
-      this.socket.emit("join_game_room", { gameId });
-      this.socket.off("board_initialized");
-      this.socket.on("board_initialized", (board) => {
-        console.log("Tahta geldi:", board);
-        onBoardReady(board);
-      });
-    } else {
-      console.warn("Socket bağlı değil, bağlanmadan önce çağrı yapıldı.");
-    }
-  }
-
-  onRemainingLettersUpdated(callback) {
+  disconnect() {
     if (this.socket) {
-      this.socket.off("remaining_letters_updated"); // Önlem için varsa eskiyi kaldır
-      this.socket.on("remaining_letters_updated", callback);
+      this.socket.disconnect();
+      this.socket = null;
     }
+  }
+
+  registerListener(event, callback) {
+    if (!this.socket) return;
+    this.socket.off(event);
+    this.socket.on(event, callback);
+  }
+
+  // === Only event notifications (sinyaller) ===
+
+  onBothPlayersReady(callback) {
+    this.registerListener("both_players_ready", callback);
+  }
+
+  onLettersUpdated(callback) {
+    this.registerListener("letters_updated", callback);
+  }
+
+  onScoreUpdated(callback) {
+    this.registerListener("score_updated", callback);
+  }
+
+  onTurnChanged(callback) {
+    this.registerListener("turn_changed", callback);
   }
 }
 

@@ -22,96 +22,54 @@ const NewGame = ({ navigation }) => {
   const [currentGameType, setCurrentGameType] = useState(null);
 
   const handleFindMatch = async (gameType) => {
+    setIsMatching(true);
+    setCurrentGameType(gameType);
+
     try {
-      console.log("🔍 Eşleşme başlatılıyor...");
-      setIsMatching(true);
-      setCurrentGameType(gameType);
+      const userData = JSON.parse(await AsyncStorage.getItem("userData"));
+      const playerId = userData.id;
+      console.log("Player ID:", playerId);
 
+      // 1. Rakip bulma isteği (API)
       const result = await GameService.findOpponent(gameType);
-      console.log("✅ GameService cevabı:", result);
-
-      if (result.success && result.game?.id) {
-        const gameId = result.game.id;
-        const userId = await AsyncStorage.getItem("userId");
-        console.log("📌 Kullanıcı ID:", userId);
-        console.log("🎮 Game ID:", gameId);
-
-        await socketService.connect(SERVER_URL);
-        console.log("🔌 Socket bağlantısı kuruldu");
-
-        let board = null;
-        let letters = null;
-        let totalRemaining = null;
-        let navigated = false;
-
-        // ✅ 1. Dinleyicileri önce kur
-        socketService.onBoardInitialized((boardData) => {
-          console.log("📦 Board alındı");
-          board = boardData;
-          tryNavigate();
-        });
-
-        socketService.onInitialLetters(
-          ({ playerId, letters: incomingLetters }) => {
-            console.log(
-              "✉️ Harf eventi geldi. playerId:",
-              playerId,
-              "→ bizimki:",
-              userId
-            );
-            if (parseInt(userId) === playerId) {
-              console.log("✅ Bu harfler bize ait:", incomingLetters);
-              letters = incomingLetters;
-              tryNavigate();
-            } else {
-              console.log("❌ Bu harfler başka oyuncuya ait, atlanıyor.");
-            }
-          }
-        );
-
-        socketService.onRemainingLettersUpdated(({ totalRemaining: count }) => {
-          console.log("🔢 Kalan harf sayısı geldi:", count);
-          totalRemaining = count;
-          tryNavigate();
-        });
-
-        // ✅ 2. En son join emit gönder
-        console.log("➡️ joinGameRoom emit atılıyor...");
-        socketService.joinGameRoom(gameId, parseInt(userId));
-
-        // ✅ 3. Hepsi gelince yönlendir
-        const tryNavigate = () => {
-          console.log(
-            "🧪 tryNavigate kontrol → board:",
-            !!board,
-            "| letters:",
-            !!letters,
-            "| remaining:",
-            totalRemaining
-          );
-
-          if (!navigated && board && letters && totalRemaining !== null) {
-            navigated = true;
-            console.log(
-              "🚀 Tüm veriler alındı, GameScreen'e yönlendiriliyor..."
-            );
-            setIsMatching(false);
-            navigation.navigate("GameScreen", {
-              gameId,
-              board,
-              playerLetters: letters,
-              totalRemaining,
-            });
-          }
-        };
-      } else {
-        console.warn("❌ Game ID yok, eşleşme başarısız.");
-        Alert.alert("Hata", "Oyun başlatılamadı");
+      if (!result.success || !result.game?.id) {
+        Alert.alert("Hata", "Eşleşme bulunamadı.");
         setIsMatching(false);
+        return;
       }
+
+      const gameId = result.game.id;
+
+      // 2. Socket bağlantısı ve odaya katıl
+      await socketService.connect(SERVER_URL);
+      socketService.joinGameRoom(gameId); // sadece gameId yeterli
+
+      // 3. Socket: iki oyuncu hazır olunca
+      socketService.onBothPlayersReady(async () => {
+        try {
+          // 4. API: Gerekli verileri al
+          const joinRes = await GameService.joinGame(gameId, playerId);
+          const { board, letters, players, totalRemaining } = joinRes;
+
+          setIsMatching(false);
+
+          // 5. GameScreen'e yönlendir
+          navigation.navigate("GameScreen", {
+            gameId,
+            board,
+            letters,
+            players,
+            totalRemaining,
+          });
+        } catch (err) {
+          console.error("Veri alma hatası:", err);
+          Alert.alert("Hata", "Oyun verileri alınamadı.");
+          setIsMatching(false);
+        }
+      });
     } catch (error) {
-      console.error("💥 Eşleşme sırasında hata:", error);
-      Alert.alert("Hata", error.message || "Oyun aranırken hata oluştu");
+      console.error("Eşleşme hatası:", error);
+      Alert.alert("Hata", "Eşleşme sırasında hata oluştu");
       setIsMatching(false);
     }
   };

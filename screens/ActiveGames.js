@@ -52,16 +52,39 @@ const ActiveGames = () => {
 
   const handleGamePress = async (gameId) => {
     try {
+      const token = await AsyncStorage.getItem("userToken");
+      const userData = JSON.parse(await AsyncStorage.getItem("userData"));
+      const playerId = userData.id;
+
+      // 1. Socket bağlantısı yoksa bağlan
       if (!socketService.socket || !socketService.socket.connected) {
         await socketService.connect("https://wordbrust-server.onrender.com");
       }
 
-      socketService.joinGameRoomAndListenBoard(gameId, (board) => {
-        navigation.navigate("GameScreen", {
-          gameId,
-          board,
-          playerLetters: null,
-        });
+      // 2. Socket ile odaya katıl
+      socketService.joinGameRoom(gameId, playerId);
+
+      // 3. API ile güncel verileri al
+      const response = await axios.post(
+        `${API_URL}/game/${gameId}/join`,
+        { playerId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const { board, letters, players, totalRemaining } = response.data;
+
+      // 4. GameScreen'e yönlendir
+      navigation.navigate("GameScreen", {
+        gameId,
+        board,
+        letters,
+        players,
+        totalRemaining,
       });
     } catch (error) {
       console.error("Oyuna katılırken hata:", error);

@@ -12,24 +12,21 @@ import {
 
 import { Colors } from "../constants/Colors";
 import CardComponent from "../components/atoms/CardComponent";
-import socket from "../services/SocketService";
+import socketService from "../services/SocketService";
 import { useFocusEffect } from "@react-navigation/native";
 import { useEffect } from "react";
 import { useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { GameService } from "../services/GameService";
 
+const SERVER_URL = "https://wordbrust-server.onrender.com";
 const CELL_SIZE = Dimensions.get("window").width / 15 - 3;
 const LETTER_SIZE = Dimensions.get("window").width / 10 - 4;
 const BOARD_SIZE = 15;
 
 const GameScreen = ({ route }) => {
-  const {
-    gameId,
-    board: initialBoard,
-    playerLetters,
-    totalRemaining,
-  } = route.params;
+  const { gameId } = route.params;
 
   const getLetterPoints = (letter) => {
     const pointsMap = {
@@ -67,64 +64,47 @@ const GameScreen = ({ route }) => {
     return pointsMap[letter] || 0;
   };
 
-  const [board, setBoard] = useState(initialBoard);
+  const [board, setBoard] = useState([]);
   const [selectedCell, setSelectedCell] = useState(null);
   const [selectedLetter, setSelectedLetter] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [letters, setLetters] = useState([]);
+  const [players, setPlayers] = useState([]);
+  const [remainingLetters, setRemainingLetters] = useState(0);
+  const [isMyTurn, setIsMyTurn] = useState(false);
+
   useEffect(() => {
     AsyncStorage.getItem("userId").then((id) => setCurrentUserId(parseInt(id)));
   }, []);
 
-  const [letters, setLetters] = useState(
-    (playerLetters || []).map((l) => ({
-      letter: l.letter,
-      score: getLetterPoints(l.letter),
-    }))
-  );
-  const [remainingLetters, setRemainingLetters] = useState(totalRemaining || 0);
-
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        socket.leaveGameRoom(gameId);
-      };
-    }, [gameId])
-  );
-
   useEffect(() => {
-    const handleRemainingLetters = ({ totalRemaining }) => {
-      console.log("📦 Güncel kalan harf sayısı:", totalRemaining);
-      setRemainingLetters(totalRemaining);
-    };
+    if (currentUserId == null) return;
 
-    const handleInitialLetters = ({ playerId, letters: incomingLetters }) => {
-      console.log("✉️ Gelen harfler:", incomingLetters);
-      if (playerId !== currentUserId) return;
-        setLetters(
-          incomingLetters.map((l) => ({
-            letter: l.letter,
-            score: getLetterPoints(l.letter),
-          }))
-        );
-    };
+    let mounted = true;
+    (async () => {
+      await socketService.connect(SERVER_URL);
+      socketService.joinGameRoom(gameId, currentUserId);
 
-    const handleBoardUpdated = (newBoard) => {
-      console.log("🔄 Yeni board geldi");
-      setBoard(newBoard);
-    };
+      const response = await GameService.joinGame(gameId);
+      if (!mounted) return;
 
-    // Listeleyicileri ekle
-    socket.onRemainingLettersUpdated(handleRemainingLetters);
-    socket.onInitialLetters(handleInitialLetters);
-    socket.onBoardInitialized(handleBoardUpdated);
+      setBoard(response.board);
+      setRemainingLetters(response.totalRemaining);
+      setPlayers(response.players);
+      setLetters(
+        response.letters.map((l) => ({
+          letter: l.letter,
+          score: getLetterPoints(l.letter),
+        }))
+      );
+      setIsMyTurn(response.isMyTurn);
+    })();
 
-    // Temizlik
     return () => {
-      socket.socket?.off("remaining_letters_updated", handleRemainingLetters);
-      socket.socket?.off("initial_letters", handleInitialLetters);
-      socket.socket?.off("board_initialized", handleBoardUpdated);
+      mounted = false;
+      socketService.leaveGameRoom(gameId);
     };
-  }, [gameId]);
+  }, [gameId, currentUserId]);
 
   const createGrid = (board) => {
     const grid = [];
@@ -248,15 +228,24 @@ const GameScreen = ({ route }) => {
 
   const gridData = createGrid(board);
 
+  const me = players.find((p) => p.id === currentUserId) || {
+    username: "",
+    score: 0,
+  };
+  const opponent = players.find((p) => p.id !== currentUserId) || {
+    username: "",
+    score: 0,
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.gameInfoContainer}>
         <View style={styles.playerInfoWrapper}>
           <View style={styles.playerBadge}>
             <Text style={styles.playerName} numberOfLines={1}>
-              Ahmet
+              {me.username}
             </Text>
-            <Text style={styles.playerScore}>124</Text>
+            <Text style={styles.playerScore}>{me.score}</Text>
           </View>
           <View style={[styles.turnIndicator, styles.activePlayer]} />
         </View>
@@ -274,9 +263,9 @@ const GameScreen = ({ route }) => {
         <View style={styles.playerInfoWrapper}>
           <View style={styles.playerBadge}>
             <Text style={styles.playerName} numberOfLines={1}>
-              Mehmet
+              {opponent.username}
             </Text>
-            <Text style={styles.playerScore}>98</Text>
+            <Text style={styles.playerScore}>{opponent.score}</Text>
           </View>
           <View style={styles.turnIndicator} />
         </View>
@@ -316,7 +305,15 @@ const GameScreen = ({ route }) => {
             <Text style={styles.controlButtonText}>Pas</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.controlButton, styles.playButton]}>
+          <TouchableOpacity
+            style={[
+              styles.controlButton,
+              styles.playButton,
+              !isMyTurn && { opacity: 0.4 }, // sırası değilse saydamlaştır
+            ]}
+            disabled={!isMyTurn} // sırası değilse tıklanamaz
+            // onPress={handlePlayMove} // Oyna butonuna basınca yapılacak işlem
+          >
             <Ionicons name="play" size={24} color="white" />
             <Text style={[styles.controlButtonText, { color: "white" }]}>
               Oyna
