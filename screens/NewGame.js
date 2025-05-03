@@ -39,6 +39,7 @@ const NewGame = ({ navigation }) => {
       }
 
       const gameId = result.game.id;
+      await AsyncStorage.setItem("lastGameMode", gameType); // buraya ekle
 
       // 2. Socket bağlantısı ve odaya katıl
       await socketService.connect(SERVER_URL);

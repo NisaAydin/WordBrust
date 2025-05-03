@@ -28,6 +28,7 @@ const BOARD_SIZE = 15;
 
 const GameScreen = ({ route }) => {
   const { gameId } = route.params;
+  const [gameMode, setGameMode] = useState(null);
 
   const getLetterPoints = (letter) => {
     const pointsMap = {
@@ -85,6 +86,14 @@ const GameScreen = ({ route }) => {
 
   useEffect(() => {
     AsyncStorage.getItem("userId").then((id) => setCurrentUserId(parseInt(id)));
+  }, []);
+
+  useEffect(() => {
+    const loadGameMode = async () => {
+      const stored = await AsyncStorage.getItem("lastGameMode");
+      setGameMode(stored || "Bilinmiyor");
+    };
+    loadGameMode();
   }, []);
 
   useEffect(() => {
@@ -404,7 +413,7 @@ const GameScreen = ({ route }) => {
             <Text style={styles.remainingLettersLabel}>KALAN</Text>
           </View>
           <View style={styles.timerBadge}>
-            <Text style={styles.timerText}>02:45</Text>
+            <Text style={styles.timerText}> Mod: {gameMode}</Text>
           </View>
         </View>
 
