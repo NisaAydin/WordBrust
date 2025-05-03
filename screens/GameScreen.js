@@ -91,15 +91,12 @@ const GameScreen = ({ route }) => {
     if (currentUserId == null) return;
 
     let mounted = true;
-    (async () => {
-      await socketService.connect(SERVER_URL);
-      socketService.joinGameRoom(gameId, currentUserId);
 
+    const fetchGameState = async () => {
       const response = await GameService.joinGame(gameId);
       if (!mounted) return;
 
       setBoard(sortBoard(response.board));
-
       setRemainingLetters(response.totalRemaining);
       setPlayers(response.players);
       setLetters(
@@ -109,11 +106,26 @@ const GameScreen = ({ route }) => {
         }))
       );
       setIsMyTurn(response.isMyTurn);
+    };
+
+    (async () => {
+      await socketService.connect(SERVER_URL);
+      socketService.joinGameRoom(gameId, currentUserId);
+
+      // 🎯 İlk veri çekimi
+      await fetchGameState();
+
+      // 🎯 Hamle yapıldığında güncelle
+      socketService.onMoveMade(() => {
+        console.log("📥 move_made alındı. Veriler güncelleniyor...");
+        fetchGameState();
+      });
     })();
 
     return () => {
       mounted = false;
       socketService.leaveGameRoom(gameId);
+      socketService.offMoveMade(); // dinlemeyi bırak
     };
   }, [gameId, currentUserId]);
 
@@ -145,7 +157,6 @@ const GameScreen = ({ route }) => {
   };
   const handlePlayMove = async () => {
     try {
-      // 👇 Sadece kullanıcı tarafından yeni yerleştirilen harfler
       const placedLetters = board.filter(
         (cell) => cell.letter && cell.initial === false
       );
@@ -179,9 +190,9 @@ const GameScreen = ({ route }) => {
         return false;
       });
 
-      const sortedCells = fullWordCells.sort((a, b) => {
-        return direction === "horizontal" ? a.col - b.col : a.row - b.row;
-      });
+      const sortedCells = fullWordCells.sort((a, b) =>
+        direction === "horizontal" ? a.col - b.col : a.row - b.row
+      );
 
       const word = sortedCells.map((c) => c.letter).join("");
       const score = placedLetters.reduce(
@@ -191,6 +202,7 @@ const GameScreen = ({ route }) => {
       const startRow = sortedCells[0].row;
       const startCol = sortedCells[0].col;
 
+      // 👉 Hamle API isteği
       const response = await MoveService.sendMove(gameId, {
         playerId: currentUserId,
         word,
@@ -207,22 +219,13 @@ const GameScreen = ({ route }) => {
 
       console.log("✅ Hamle sonucu:", response);
 
-      // 🔄 Yeni verileri çek
-      const updated = await GameService.joinGame(gameId);
+      // ⛔ Artık burada joinGame ile tekrar veri çekmeye gerek yok
+      // Çünkü socketService.onMoveMade ile backend herkesi bilgilendiriyor
 
-      setBoard(sortBoard(updated.board));
-      setRemainingLetters(updated.totalRemaining);
-      setPlayers(updated.players);
-      setLetters(
-        updated.letters.map((l) => ({
-          letter: l.letter,
-          score: getLetterPoints(l.letter),
-        }))
-      );
-
-      setIsMyTurn(false);
+      // 🎯 Sadece kendi tarafını anlık olarak boşalt (isteğe bağlı)
       setSelectedLetter(null);
       setSelectedCell(null);
+      setIsMyTurn(false);
     } catch (err) {
       alert("Hamle gönderilemedi: " + err.message);
     }

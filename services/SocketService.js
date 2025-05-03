@@ -68,16 +68,16 @@ class SocketService {
     this.registerListener("both_players_ready", callback);
   }
 
-  onLettersUpdated(callback) {
-    this.registerListener("letters_updated", callback);
+  onMoveMade(callback) {
+    if (this.socket && typeof callback === "function") {
+      this.socket.on("move_made", callback);
+    }
   }
 
-  onScoreUpdated(callback) {
-    this.registerListener("score_updated", callback);
-  }
-
-  onTurnChanged(callback) {
-    this.registerListener("turn_changed", callback);
+  offMoveMade() {
+    if (this.socket) {
+      this.socket.off("move_made");
+    }
   }
 }
 
