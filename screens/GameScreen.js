@@ -219,13 +219,23 @@ const GameScreen = ({ route }) => {
 
       console.log("✅ Hamle sonucu:", response);
 
-      // ⛔ Artık burada joinGame ile tekrar veri çekmeye gerek yok
-      // Çünkü socketService.onMoveMade ile backend herkesi bilgilendiriyor
-
-      // 🎯 Sadece kendi tarafını anlık olarak boşalt (isteğe bağlı)
       setSelectedLetter(null);
       setSelectedCell(null);
       setIsMyTurn(false);
+
+      const usedLetterChars = placedLetters.map((p) => p.letter);
+      const updatedLetters = [...letters];
+      usedLetterChars.forEach((char) => {
+        const index = updatedLetters.findIndex((l) => l.letter === char);
+        if (index !== -1) updatedLetters.splice(index, 1);
+      });
+
+      const newLetterObjs = response.result.newLetters.map((l) => ({
+        letter: l,
+        score: getLetterPoints(l),
+      }));
+
+      setLetters([...updatedLetters, ...newLetterObjs]);
     } catch (err) {
       alert("Hamle gönderilemedi: " + err.message);
     }
