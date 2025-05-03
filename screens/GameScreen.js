@@ -100,7 +100,8 @@ const GameScreen = ({ route }) => {
       setRemainingLetters(response.totalRemaining);
       setPlayers(response.players);
       setLetters(
-        response.letters.map((l) => ({
+        response.letters.map((l, index) => ({
+          id: `${l.letter}_${index}_${Date.now()}`, // benzersiz ID
           letter: l.letter,
           score: getLetterPoints(l.letter),
         }))
@@ -227,7 +228,16 @@ const GameScreen = ({ route }) => {
       setSelectedCell(null);
       setIsMyTurn(false);
     } catch (err) {
-      alert("Hamle gönderilemedi: " + err.message);
+      let errorMessage = "Hamle gönderilemedi.";
+
+      // sunucudan özel mesaj varsa al
+      if (err.response?.data?.error) {
+        errorMessage += "\n" + err.response.data.error;
+      } else if (err.message) {
+        errorMessage += "\n" + err.message;
+      }
+
+      alert(errorMessage); // sadece Alert göster
     }
   };
 
@@ -241,7 +251,8 @@ const GameScreen = ({ route }) => {
 
     const restoredLetters = board
       .filter((cell) => cell.initial === false && cell.letter)
-      .map((cell) => ({
+      .map((cell, index) => ({
+        id: `${cell.letter}_${index}_${Date.now()}`, // 🔄 benzersiz ID
         letter: cell.letter,
         score: getLetterPoints(cell.letter),
       }));
@@ -249,7 +260,7 @@ const GameScreen = ({ route }) => {
     setBoard(updatedBoard);
     setLetters([...letters, ...restoredLetters]);
     setSelectedCell(null);
-    setSelectedLetter(null);
+    setSelectedLetter(null); // ✅ seçimi tamamen temizle
   };
 
   const handleCellPress = (cell) => {
@@ -337,7 +348,8 @@ const GameScreen = ({ route }) => {
   };
 
   const renderLetter = (letterObj, index) => {
-    const isSelected = selectedLetter?.letter === letterObj.letter;
+    const isSelected = selectedLetter?.id === letterObj.id;
+
     return (
       <TouchableOpacity
         key={index}
