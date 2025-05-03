@@ -101,11 +101,12 @@ const GameScreen = ({ route }) => {
       setPlayers(response.players);
       setLetters(
         response.letters.map((l, index) => ({
-          id: `${l.letter}_${index}_${Date.now()}`, // benzersiz ID
+          id: `${l.letter}-${index}-${Date.now()}`, // benzersiz ID
           letter: l.letter,
           score: getLetterPoints(l.letter),
         }))
       );
+
       setIsMyTurn(response.isMyTurn);
     };
 
@@ -238,16 +239,7 @@ const GameScreen = ({ route }) => {
 
       setLetters([...updatedLetters, ...newLetterObjs]);
     } catch (err) {
-      let errorMessage = "Hamle gönderilemedi.";
-
-      // sunucudan özel mesaj varsa al
-      if (err.response?.data?.error) {
-        errorMessage += "\n" + err.response.data.error;
-      } else if (err.message) {
-        errorMessage += "\n" + err.message;
-      }
-
-      alert(errorMessage); // sadece Alert göster
+      alert("Hamle gönderilemedi: " + err.message);
     }
   };
 
@@ -261,8 +253,7 @@ const GameScreen = ({ route }) => {
 
     const restoredLetters = board
       .filter((cell) => cell.initial === false && cell.letter)
-      .map((cell, index) => ({
-        id: `${cell.letter}_${index}_${Date.now()}`, // 🔄 benzersiz ID
+      .map((cell) => ({
         letter: cell.letter,
         score: getLetterPoints(cell.letter),
       }));
@@ -270,7 +261,7 @@ const GameScreen = ({ route }) => {
     setBoard(updatedBoard);
     setLetters([...letters, ...restoredLetters]);
     setSelectedCell(null);
-    setSelectedLetter(null); // ✅ seçimi tamamen temizle
+    setSelectedLetter(null);
   };
 
   const handleCellPress = (cell) => {
@@ -278,15 +269,19 @@ const GameScreen = ({ route }) => {
       if (!cell.letter) {
         const newBoard = board.map((c) => {
           if (c.row === cell.row && c.col === cell.col) {
-            return { ...c, letter: selectedLetter.letter, initial: false };
+            return {
+              ...c,
+              letter: selectedLetter.letter,
+              id: selectedLetter.id,
+              initial: false,
+            };
           }
           return c;
         });
         setBoard(newBoard);
 
-        const index = letters.findIndex(
-          (l) => l.letter === selectedLetter.letter
-        );
+        const index = letters.findIndex((l) => l.id === selectedLetter.id);
+
         if (index !== -1) {
           const updatedLetters = [...letters];
           updatedLetters.splice(index, 1);
@@ -358,7 +353,9 @@ const GameScreen = ({ route }) => {
   };
 
   const renderLetter = (letterObj, index) => {
-    const isSelected = selectedLetter?.id === letterObj.id;
+    const isSelected =
+      selectedLetter?.id === letterObj.id &&
+      selectedLetter?.letter === letterObj.letter;
 
     return (
       <TouchableOpacity
