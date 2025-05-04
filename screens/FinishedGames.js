@@ -25,21 +25,24 @@ const FinishedGames = () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
       const userId = parseInt(await AsyncStorage.getItem("userId")); // <-- fix burada
-  
-      const response = await axios.get("https://wordbrust-server.onrender.com/api/game/finished-games", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
+
+      const response = await axios.get(
+        "https://wordbrust-server.onrender.com/api/game/finished-games",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       console.log("Bitmiş oyunlar:", response.data);
-  
+
       if (response.data) {
         const formatted = response.data.map((g) => {
           const isUserPlayer1 = g.player1.id === userId;
           const me = isUserPlayer1 ? g.player1 : g.player2;
           const opponent = isUserPlayer1 ? g.player2 : g.player1;
-  
+
           return {
             id: g.gameId,
             user_id: me.id,
@@ -52,17 +55,19 @@ const FinishedGames = () => {
         });
 
         console.log("Formatlanmış bitmiş oyunlar:", formatted);
-  
+
         setHistoryGames(formatted);
       }
     } catch (err) {
-      console.error("Bitmiş oyunları alırken hata:", err.response?.data || err.message);
+      console.error(
+        "Bitmiş oyunları alırken hata:",
+        err.response?.data || err.message
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
-  
 
   useEffect(() => {
     fetchFinishedGames();
@@ -73,21 +78,13 @@ const FinishedGames = () => {
     fetchFinishedGames();
   };
 
-  const handleGamePress = (gameId) => {
-    navigation.navigate("GameHistoryDetail", { gameId });
-  };
-
   const renderGameCard = ({ item }) => {
     const isWin =
       item.result?.toLowerCase().includes("kazandınız") ||
       item.winner_id === item.user_id;
 
     return (
-      <TouchableOpacity
-        style={styles.gameCard}
-        onPress={() => handleGamePress(item.id)}
-        activeOpacity={0.9}
-      >
+      <TouchableOpacity style={styles.gameCard} activeOpacity={0.9}>
         <View style={styles.cardTopSection}>
           <Image
             source={require("../assets/images/profile-picture.png")}
