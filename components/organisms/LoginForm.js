@@ -36,7 +36,7 @@ const LoginForm = ({ onLogin }) => {
         onChangeText={setPassword}
         secureTextEntry={true}
       />
-      {/* Remember Me Switch */}
+
       <View style={styles.rememberMeContainer}>
         <Switch
           value={rememberMe}

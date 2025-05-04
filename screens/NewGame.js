@@ -30,25 +30,24 @@ const NewGame = ({ navigation }) => {
       const playerId = userData.id;
       console.log("Player ID:", playerId);
 
-      // 1. Rakip bulma isteği (API)
+      // 1. Rakip bulma isteği
       const result = await GameService.findOpponent(gameType);
       if (!result.success || !result.game?.id) {
         Alert.alert("Hata", "Eşleşme bulunamadı.");
         setIsMatching(false);
         return;
       }
-
       const gameId = result.game.id;
-      await AsyncStorage.setItem("lastGameMode", gameType); // buraya ekle
+      await AsyncStorage.setItem("lastGameMode", gameType);
 
       // 2. Socket bağlantısı ve odaya katıl
       await socketService.connect(SERVER_URL);
-      socketService.joinGameRoom(gameId); // sadece gameId yeterli
+      socketService.joinGameRoom(gameId);
 
       // 3. Socket: iki oyuncu hazır olunca
       socketService.onBothPlayersReady(async () => {
         try {
-          // 4. API: Gerekli verileri al
+          // 4. API ile verileri al
           const joinRes = await GameService.joinGame(gameId, playerId);
           const { board, letters, players, totalRemaining } = joinRes;
 

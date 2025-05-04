@@ -21,7 +21,7 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const data = await UserService.getProfile(); // burada istatistikler geliyor
+        const data = await UserService.getProfile();
         setProfile(data);
       } catch (error) {
         console.log("Profil alınamadı:", error.message);
@@ -36,7 +36,6 @@ const HomeScreen = ({ navigation }) => {
       colors={[Colors.background, "#2D0066", Colors.gradientEnd]}
       style={styles.container}
     >
-      {/* Upper Info */}
       <View style={styles.header}>
         <Text style={styles.time}></Text>
         <View style={styles.profileIcon}>
@@ -50,14 +49,12 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Main Content */}
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.greeting}>
           Merhaba,{" "}
           <Text style={styles.username}>{user?.username || "Oyuncu"}</Text>!
         </Text>
 
-        {/* Stats Card */}
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
             <MaterialCommunityIcons
@@ -87,7 +84,6 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Main Buttons */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.mainButton}
@@ -114,7 +110,6 @@ const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Secondary Buttons */}
         <View style={styles.secondaryButtons}>
           <TouchableOpacity style={styles.secondaryButton}>
             <MaterialCommunityIcons

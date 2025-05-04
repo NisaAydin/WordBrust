@@ -1,18 +1,16 @@
-// components/atoms/Circle.js
 import React from "react";
 import { View, StyleSheet } from "react-native";
 
 const Circle = ({ size, position, mode = "dark" }) => {
-  // Renk değişimi için switch case kullanıyoruz
   let circleColor;
 
   switch (mode) {
     case "dark":
-      circleColor = "rgba(61, 4, 94, 0.25)"; // Dark mode color
+      circleColor = "rgba(61, 4, 94, 0.25)";
       break;
     case "light":
     default:
-      circleColor = "rgba(213, 229, 239, 0.35)"; // Light mode color
+      circleColor = "rgba(213, 229, 239, 0.35)";
       break;
   }
 
@@ -23,11 +21,11 @@ const Circle = ({ size, position, mode = "dark" }) => {
         {
           width: size,
           height: size,
-          borderRadius: size / 2, // Yuvarlak daire yapar
+          borderRadius: size / 2,
           position: "absolute",
           left: position.left,
           top: position.top,
-          backgroundColor: circleColor, // Renk burada dinamik olarak ayarlanıyor
+          backgroundColor: circleColor,
         },
       ]}
     />
@@ -38,9 +36,9 @@ const styles = StyleSheet.create({
   circle: {
     opacity: 1,
     shadowColor: "black",
-    shadowOffset: { width: 20, height: 20 }, // Gölgenin pozisyonu
-    shadowOpacity: 0.1, // Gölgenin opaklığı
-    shadowRadius: 10, // Gölgenin yayılma genişliği
+    shadowOffset: { width: 20, height: 20 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
     zIndex: 1,
   },
 });

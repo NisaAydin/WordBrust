@@ -1,15 +1,12 @@
-// services/AuthService.js
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_URL = "https://wordbrust-server.onrender.com/api/auth";
 
-// Axios instance oluşturma
 const api = axios.create({
   baseURL: API_URL,
 });
 
-// Request interceptor ile token ekleme
 api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem("userToken");
@@ -33,7 +30,6 @@ export const AuthService = {
       });
       console.log("Veri:", response.data);
 
-      // Token'ı AsyncStorage'e kaydet
       if (response.data.token) {
         await AsyncStorage.setItem("userToken", response.data.token);
         await AsyncStorage.setItem(
@@ -62,7 +58,6 @@ export const AuthService = {
         user_password: password,
       });
 
-      // Register sonrası otomatik login için
       if (response.data.token) {
         await AsyncStorage.setItem("userToken", response.data.token);
         await AsyncStorage.setItem(
@@ -85,7 +80,6 @@ export const AuthService = {
 
   async logout() {
     try {
-      // 1. Sunucuya logout isteği gönder (opsiyonel)
       await axios.post(
         `${API_URL}/logout`,
         {},
@@ -96,14 +90,12 @@ export const AuthService = {
         }
       );
 
-      // 2. Yerel verileri temizle
       await AsyncStorage.multiRemove(["userToken", "userData"]);
 
       console.log("Çıkış başarılı");
       return true;
     } catch (error) {
       console.log("Çıkış hatası:", error);
-      // Sunucu hatası olsa bile yerel verileri silmeye devam et
       await AsyncStorage.multiRemove(["userToken", "userData"]);
       return false;
     }

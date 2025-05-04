@@ -28,14 +28,13 @@ const styles = StyleSheet.create({
     height: 60,
     backgroundColor: Colors.primary,
     borderRadius: 30,
-    justifyContent: "center", // dikey ortalama
-    alignItems: "center", // yatay
-    shadowColor: "black", // Gölgenin rengi
-    shadowOffset: { width: 0, height: 4 }, // Gölgenin pozisyonu
-    shadowOpacity: 0.25, // Gölgenin opaklığı
-    shadowRadius: 10, // Gölgenin yayılma genişliği
-    // Android için gölge
-    elevation: 5, // Android için yükseklik
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "black",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
   },
   text: {
     fontFamily: "roboto",

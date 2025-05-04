@@ -18,20 +18,20 @@ const CardComponent = ({ isOpposite = false, children }) => {
 const styles = StyleSheet.create({
   card: {
     width: "100%",
-    justifyContent: "flex-start", // İçeriği üstten hizala
+    justifyContent: "flex-start",
   },
   contentContainer: {
     width: "100%",
     padding: 20,
-    flex: 1, // Tüm alanı kapla
+    flex: 1,
   },
   normalCard: {
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
     borderBottomLeftRadius: 60,
     borderBottomRightRadius: 60,
-    paddingTop: 40, // Üst padding'i artır
-    minHeight: 375, // Sabit yükseklik yerine minimum yükseklik
+    paddingTop: 40,
+    minHeight: 375,
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
     borderWidth: 2,
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 30,
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
-    paddingBottom: 40, // Alt padding'i artır
+    paddingBottom: 40,
     minHeight: 300,
     backgroundColor: "transparent",
   },

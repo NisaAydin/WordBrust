@@ -60,7 +60,6 @@ const Profile = () => {
       colors={[Colors.background, Colors.gradientEnd]}
       style={styles.container}
     >
-      {/* Profil Bilgileri */}
       <View style={styles.profileContainer}>
         <View style={styles.avatarContainer}>
           <Image
@@ -126,7 +125,6 @@ const Profile = () => {
         </View>
       </View>
 
-      {/* Çıkış Butonu */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <MaterialCommunityIcons
           name="logout-variant"
@@ -235,8 +233,8 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     borderWidth: 1,
     borderColor: "#FF6B8B",
-    width: "90%", // Genişlik artırıldı
-    alignSelf: "center", // Ortalamak için
+    width: "90%",
+    alignSelf: "center",
   },
   logoutIcon: {
     marginRight: 10,

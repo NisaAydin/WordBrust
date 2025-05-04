@@ -10,8 +10,6 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Alert,
-  Switch,
-  CheckBox,
   ActivityIndicator,
 } from "react-native";
 import SegmentedControlTab from "react-native-segmented-control-tab";
@@ -98,7 +96,7 @@ const AuthScreen = ({ navigation }) => {
               tabTextStyle={styles.tabTextStyle}
             />
           </View>
-          {/* Yükleniyor göstergesi */}
+
           {loading && (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={Colors.primary} />
@@ -145,13 +143,13 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     flex: 1,
-    justifyContent: "flex-start", // Ekran üst kısmına yerleştirme
+    justifyContent: "flex-start",
     width: "100%",
-    paddingBottom: 40, // Alt kısmı rahatlatmak için
+    paddingBottom: 40,
   },
   segmentedControlContainer: {
     width: "100%",
-    marginTop: height / 4, // Segment control'ün üstte düzgün görünmesini sağlar
+    marginTop: height / 4,
   },
   tabsContainer: {
     marginBottom: 20,

@@ -24,7 +24,7 @@ const FinishedGames = () => {
   const fetchFinishedGames = async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
-      const userId = parseInt(await AsyncStorage.getItem("userId")); // <-- fix burada
+      const userId = parseInt(await AsyncStorage.getItem("userId"));
 
       const response = await axios.get(
         "https://wordbrust-server.onrender.com/api/game/finished-games",
@@ -181,7 +181,6 @@ const FinishedGames = () => {
   );
 };
 
-// Stil tanımları (aktif oyunlar sayfasıyla aynı)
 const styles = StyleSheet.create({
   container: {
     flex: 1,

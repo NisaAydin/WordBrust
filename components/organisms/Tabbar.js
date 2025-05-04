@@ -62,7 +62,7 @@ const TabBar = ({ state, descriptors, navigation }) => {
                       : tabIcons[route.name].inactive
                   }
                   size={26}
-                  color={isFocused ? "#9966FF" : "#D9D9D9"} // Exact hex colors
+                  color={isFocused ? "#9966FF" : "#D9D9D9"}
                   style={styles.icon}
                 />
                 <Text style={[styles.label, isFocused && styles.activeLabel]}>
@@ -87,13 +87,13 @@ const styles = StyleSheet.create({
   },
   tabBarWrapper: {
     flexDirection: "row",
-    backgroundColor: "#1A0033", // Dark purple background
+    backgroundColor: "#1A0033",
     marginHorizontal: 20,
     marginBottom: 10,
     borderRadius: 20,
     height: 70,
     borderWidth: 1,
-    borderColor: "#9966FF", // Light purple border
+    borderColor: "#9966FF",
     shadowColor: "#9966FF",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -118,10 +118,10 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontFamily: "Roboto-Medium",
-    color: "#D9D9D9", // Inactive text color
+    color: "#D9D9D9",
   },
   activeLabel: {
-    color: "#9966FF", // Active text color
+    color: "#9966FF",
     fontFamily: "Roboto-Bold",
   },
 });

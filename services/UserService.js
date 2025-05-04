@@ -1,9 +1,9 @@
-import api from "./api"; // axios instance'ı import ettik
+import api from "./api";
 
 export const UserService = {
   async getProfile() {
     try {
-      const response = await api.get("/api/user/profile"); // Profil bilgilerini çekiyoruz
+      const response = await api.get("/api/user/profile");
       console.log("Profil Yanıtı:", response.data);
       return response.data;
     } catch (error) {

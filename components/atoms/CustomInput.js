@@ -29,19 +29,19 @@ const CustomInput = ({
 
 const styles = StyleSheet.create({
   input: {
-    height: 50, // Yüksekliği arttırdık
+    height: 50,
     borderColor: Colors.primary,
     borderWidth: 1,
     borderRadius: 100,
     marginHorizontal: 10,
-    paddingVertical: 10, // Padding değerini ayarladık
+    paddingVertical: 10,
     paddingHorizontal: 30,
     marginBottom: 20,
     backgroundColor: "white",
     width: "100%",
-    lineHeight: 20, // Satır yüksekliğini artırdık
-    fontSize: 13, // Font boyutunu büyüttük
-    textAlignVertical: "top", // Yazıyı üstte hizaladık
+    lineHeight: 20,
+    fontSize: 13,
+    textAlignVertical: "top",
     fontFamily: "roboto",
   },
 });

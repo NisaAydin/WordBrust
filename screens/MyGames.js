@@ -8,7 +8,6 @@ import FinishedGames from "./FinishedGames";
 
 const MyGames = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
-
   const handleIndexChange = (index) => {
     setSelectedIndex(index);
   };

@@ -18,7 +18,7 @@ const RegisterForm = ({ onRegister }) => {
       Alert.alert("Hata", "Şifreler uyuşmuyor.");
       return;
     }
-    onRegister(username, email, password); // Kayıt işlemine yönlendir
+    onRegister(username, email, password);
   };
 
   return (

@@ -11,13 +11,11 @@ import {
 import { Colors } from "../constants/Colors";
 import CardComponent from "../components/atoms/CardComponent";
 import socketService from "../services/SocketService";
-import { useFocusEffect } from "@react-navigation/native";
 import { useEffect } from "react";
-import { useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GameService } from "../services/GameService";
-import { MoveService } from "../services/MoveService"; // dosyanın en üstüne ekle
+import { MoveService } from "../services/MoveService";
 import axios from "axios";
 
 const SERVER_URL = "https://wordbrust-server.onrender.com";
@@ -111,7 +109,7 @@ const GameScreen = ({ route, navigation }) => {
       );
       setIsMyTurn(response.isMyTurn);
 
-      // 🛑 Oyun bitmiş mi kontrolü
+      //  Oyun bitmiş mi kontrolü
       if (response.game_status === "finished") {
         setIsGameOver(true);
 
@@ -137,18 +135,17 @@ const GameScreen = ({ route, navigation }) => {
       await socketService.connect(SERVER_URL);
       socketService.joinGameRoom(gameId, currentUserId);
 
-      // 🎯 İlk veri çekimi
       await fetchGameState();
 
-      // 🎯 Hamle yapıldığında güncelle
+      // Hamle yapıldığında güncelleme
       socketService.onMoveMade(() => {
-        console.log("📥 move_made alındı. Veriler güncelleniyor...");
+        console.log("move_made alındı. Veriler güncelleniyor...");
         fetchGameState();
       });
 
-      // 🎯 Pes etme sinyali geldiğinde oyunu bitir
+      //  Pes etme sinyali geldiğinde oyunu bitirmek için
       socketService.onGameResigned(({ resignedBy, winnerId, winnerScore }) => {
-        console.log("📥 game_resigned alındı:", { resignedBy, winnerId });
+        console.log("game_resigned alındı:", { resignedBy, winnerId });
 
         setIsGameOver(true);
 
@@ -174,7 +171,7 @@ const GameScreen = ({ route, navigation }) => {
       mounted = false;
       socketService.leaveGameRoom(gameId);
       socketService.offMoveMade();
-      socketService.offGameResigned(); // bu önemli
+      socketService.offGameResigned();
     };
   }, [gameId, currentUserId]);
 
@@ -300,7 +297,7 @@ const GameScreen = ({ route, navigation }) => {
       }
 
       const allWordsToValidate = [word, ...crossWords];
-      console.log("🧠 Oluşan kelimeler:", allWordsToValidate);
+      console.log("Oluşan kelimeler:", allWordsToValidate);
 
       const startRow = sortedPlaced[0].row;
       const startCol = sortedPlaced[0].col;
@@ -359,7 +356,7 @@ const GameScreen = ({ route, navigation }) => {
       } else if (err.message === "Game is already finished.") {
         alert("Oyun zaten bitmiş, hamle yapılamaz.");
       } else if (err.message.startsWith("Geçersiz kelime")) {
-        alert(err.message); // örn: "Geçersiz kelime bulundu: kitap"
+        alert(err.message);
       } else if (
         err.message === "Yeni harfler mevcut harflerle temas etmeli."
       ) {
@@ -453,8 +450,6 @@ const GameScreen = ({ route, navigation }) => {
     if (cell.letter_multiplier === 3) cellStyle.push(styles.tripleLetter);
     if (cell.bonus_type) cellStyle.push(styles.bonusCell);
     if (cell.mine_type) cellStyle.push(styles.mineCell);
-
-    // 💡 Harf yerleştirildi ama henüz kaydedilmedi (Oyna'ya basılmadıysa)
     if (cell.letter && cell.initial === false) {
       cellStyle.push(styles.placedLetterCell);
     }
@@ -590,11 +585,10 @@ const GameScreen = ({ route, navigation }) => {
             style={[
               styles.controlButton,
               styles.playButton,
-              !isMyTurn && { opacity: 0.4 }, // sırası değilse saydamlaştır
+              !isMyTurn && { opacity: 0.4 },
             ]}
-            disabled={!isMyTurn} // sırası değilse tıklanamaz
+            disabled={!isMyTurn}
             onPress={handlePlayMove}
-            // onPress={handlePlayMove} // Oyna butonuna basınca yapılacak işlem
           >
             <Ionicons name="play" size={24} color="white" />
             <Text style={[styles.controlButtonText, { color: "white" }]}>
@@ -624,11 +618,10 @@ const GameScreen = ({ route, navigation }) => {
                     },
                   }
                 );
-                console.log("✅ Teslim işlemi başarıyla gönderildi");
-                // Geri kalan işlemleri socket 'game_resigned' olayı zaten yönetecek
+                console.log(" Teslim işlemi başarıyla gönderildi");
               } catch (err) {
                 console.error(
-                  "❌ Teslim olurken hata:",
+                  " Teslim olurken hata:",
                   err.response?.data || err.message
                 );
                 alert("Teslim işlemi başarısız oldu.");
@@ -699,11 +692,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingVertical: 20,
-
     backgroundColor: Colors.background,
   },
   placedLetterCell: {
-    backgroundColor: "#d1d5db", // açık gri ton
+    backgroundColor: "#d1d5db",
   },
   titleContainer: {
     marginHorizontal: 50,
@@ -732,7 +724,7 @@ const styles = StyleSheet.create({
   board: {
     flexDirection: "column",
     flexWrap: "wrap",
-    backgroundColor: "#ecf0f1", // Colors.light da olabilir
+    backgroundColor: "#ecf0f1",
     borderRadius: 4,
     padding: 2,
     marginBottom: 20,
@@ -799,7 +791,7 @@ const styles = StyleSheet.create({
   letterRackContainer: {
     textAlign: "center",
     justifyContent: "center",
-    backgroundColor: Colors.light, //
+    backgroundColor: Colors.light,
     borderColor: Colors.primary,
     borderWidth: 1,
     padding: 10,
@@ -820,7 +812,7 @@ const styles = StyleSheet.create({
     height: LETTER_SIZE,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Colors.primary, // f39c12 D4C9BE
+    backgroundColor: Colors.primary,
     borderRadius: 12,
     marginHorizontal: 5,
     shadowColor: "#34495e",
