@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GameService } from "../services/GameService";
 import { MoveService } from "../services/MoveService"; // dosyanın en üstüne ekle
+import axios from "axios";
 
 const SERVER_URL = "https://wordbrust-server.onrender.com";
 const CELL_SIZE = Dimensions.get("window").width / 15 - 3;
@@ -127,7 +128,7 @@ const GameScreen = ({ route, navigation }) => {
         }
 
         setTimeout(() => {
-          navigation.navigate("TabNavigator", { screen: "Home" }); // veya ana ekranın ismi neyse
+          navigation.navigate("TabNavigator", { screen: "Home" });
         }, 5000);
       }
     };
@@ -144,12 +145,36 @@ const GameScreen = ({ route, navigation }) => {
         console.log("📥 move_made alındı. Veriler güncelleniyor...");
         fetchGameState();
       });
+
+      // 🎯 Pes etme sinyali geldiğinde oyunu bitir
+      socketService.onGameResigned(({ resignedBy, winnerId, winnerScore }) => {
+        console.log("📥 game_resigned alındı:", { resignedBy, winnerId });
+
+        setIsGameOver(true);
+
+        const winner = players.find((p) => p.id === winnerId);
+        setWinnerInfo({
+          winnerName: winner?.username || "Berabere",
+          winnerScore,
+        });
+
+        if (resignedBy === currentUserId) {
+          setGameError("Oyunu teslim ettiniz.");
+        } else {
+          setGameError("Rakibiniz oyunu teslim etti. Kazandınız!");
+        }
+
+        setTimeout(() => {
+          navigation.navigate("TabNavigator", { screen: "Home" });
+        }, 5000);
+      });
     })();
 
     return () => {
       mounted = false;
       socketService.leaveGameRoom(gameId);
-      socketService.offMoveMade(); // dinlemeyi bırak
+      socketService.offMoveMade();
+      socketService.offGameResigned(); // bu önemli
     };
   }, [gameId, currentUserId]);
 
@@ -585,7 +610,31 @@ const GameScreen = ({ route, navigation }) => {
             <Text style={styles.controlButtonText}>Geri Al</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.controlButton}>
+          <TouchableOpacity
+            style={styles.controlButton}
+            onPress={async () => {
+              try {
+                const token = await AsyncStorage.getItem("userToken");
+                await axios.post(
+                  `https://wordbrust-server.onrender.com/api/game/resign/${gameId}`,
+                  {},
+                  {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  }
+                );
+                console.log("✅ Teslim işlemi başarıyla gönderildi");
+                // Geri kalan işlemleri socket 'game_resigned' olayı zaten yönetecek
+              } catch (err) {
+                console.error(
+                  "❌ Teslim olurken hata:",
+                  err.response?.data || err.message
+                );
+                alert("Teslim işlemi başarısız oldu.");
+              }
+            }}
+          >
             <Ionicons name="flag" size={24} color={Colors.primary} />
             <Text style={styles.controlButtonText}>Teslim</Text>
           </TouchableOpacity>

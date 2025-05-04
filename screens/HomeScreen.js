@@ -11,9 +11,25 @@ import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../services/AuthContext";
 import { Colors } from "../constants/Colors";
+import { useEffect, useState } from "react";
+import { UserService } from "../services/UserService";
 
 const HomeScreen = ({ navigation }) => {
   const { user } = useAuth();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await UserService.getProfile(); // burada istatistikler geliyor
+        setProfile(data);
+      } catch (error) {
+        console.log("Profil alınamadı:", error.message);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   return (
     <LinearGradient
@@ -58,7 +74,15 @@ const HomeScreen = ({ navigation }) => {
               color={Colors.success}
             />
             <Text style={styles.statText}>
-              %{user?.successRate || "0"} Başarı
+              %
+              {profile
+                ? Math.round(
+                    (profile.user_win_count /
+                      (profile.user_win_count + profile.user_loss_count)) *
+                      100
+                  )
+                : "0"}{" "}
+              Başarı
             </Text>
           </View>
         </View>

@@ -113,7 +113,13 @@ const Profile = () => {
               color={Colors.success}
             />
             <Text style={styles.statText}>
-              {profile?.successRate ? `${profile.successRate}%` : "0%"}
+              {profile
+                ? `${Math.round(
+                    (profile.user_win_count /
+                      (profile.user_win_count + profile.user_loss_count || 1)) *
+                      100
+                  )}%`
+                : "0%"}
             </Text>
             <Text style={styles.statLabel}>Başarı</Text>
           </View>

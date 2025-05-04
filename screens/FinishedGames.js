@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,72 +12,65 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "../constants/Colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-
-// Örnek geçmiş oyun verileri
-const mockHistoryData = [
-  {
-    gameId: "1",
-    opponentUsername: "Ahmet",
-    opponentImage: null,
-    date: "12.05.2023",
-    result: "Kazandınız",
-    userScore: 15,
-    opponentScore: 10,
-    duration: "5 dakika",
-  },
-  {
-    gameId: "2",
-    opponentUsername: "Ayşe",
-    opponentImage: null,
-    date: "10.05.2023",
-    result: "Kaybettiniz",
-    userScore: 8,
-    opponentScore: 12,
-    duration: "2 dakika",
-  },
-  {
-    gameId: "3",
-    opponentUsername: "Mehmet",
-    opponentImage: null,
-    date: "08.05.2023",
-    result: "Kazandınız",
-    userScore: 20,
-    opponentScore: 5,
-    duration: "10 dakika",
-  },
-  {
-    gameId: "4",
-    opponentUsername: "Zeynep",
-    opponentImage: null,
-    date: "05.05.2023",
-    result: "Kaybettiniz",
-    userScore: 6,
-    opponentScore: 18,
-    duration: "7 dakika",
-  },
-  {
-    gameId: "5",
-    opponentUsername: "Can",
-    opponentImage: null,
-    date: "01.05.2023",
-    result: "Kazandınız",
-    userScore: 14,
-    opponentScore: 14,
-    duration: "12 dakika",
-  },
-];
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const FinishedGames = () => {
-  const [historyGames, setHistoryGames] = useState(mockHistoryData);
+  const [historyGames, setHistoryGames] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
-  // Yenileme fonksiyonu (simüle ediyoruz)
+  const fetchFinishedGames = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      const userId = parseInt(await AsyncStorage.getItem("userId")); // <-- fix burada
+  
+      const response = await axios.get("https://wordbrust-server.onrender.com/api/game/finished-games", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      console.log("Bitmiş oyunlar:", response.data);
+  
+      if (response.data) {
+        const formatted = response.data.map((g) => {
+          const isUserPlayer1 = g.player1.id === userId;
+          const me = isUserPlayer1 ? g.player1 : g.player2;
+          const opponent = isUserPlayer1 ? g.player2 : g.player1;
+  
+          return {
+            id: g.gameId,
+            user_id: me.id,
+            user_score: me.score,
+            opponent_score: opponent.score,
+            opponentUsername: opponent.username,
+            updatedAt: g.updatedAt,
+            winner_id: g.winnerId,
+          };
+        });
+
+        console.log("Formatlanmış bitmiş oyunlar:", formatted);
+  
+        setHistoryGames(formatted);
+      }
+    } catch (err) {
+      console.error("Bitmiş oyunları alırken hata:", err.response?.data || err.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+  
+
+  useEffect(() => {
+    fetchFinishedGames();
+  }, []);
+
   const handleRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+    fetchFinishedGames();
   };
 
   const handleGamePress = (gameId) => {
@@ -85,12 +78,14 @@ const FinishedGames = () => {
   };
 
   const renderGameCard = ({ item }) => {
-    const isWin = item.result?.toLowerCase().includes("kazandınız") || false;
+    const isWin =
+      item.result?.toLowerCase().includes("kazandınız") ||
+      item.winner_id === item.user_id;
 
     return (
       <TouchableOpacity
         style={styles.gameCard}
-        onPress={() => handleGamePress(item.gameId)}
+        onPress={() => handleGamePress(item.id)}
         activeOpacity={0.9}
       >
         <View style={styles.cardTopSection}>
@@ -101,7 +96,7 @@ const FinishedGames = () => {
 
           <View style={styles.gameInfo}>
             <Text style={styles.opponentName} numberOfLines={1}>
-              {item.opponentUsername}
+              {item.opponentUsername || "Bilinmiyor"}
             </Text>
 
             <View style={styles.detailsRow}>
@@ -112,7 +107,7 @@ const FinishedGames = () => {
                   color={Colors.textSecondary}
                 />
                 <Text style={styles.detailText}>
-                  {item.date || "Tarih yok"}
+                  {new Date(item.updatedAt).toLocaleDateString("tr-TR")}
                 </Text>
               </View>
 
@@ -128,7 +123,7 @@ const FinishedGames = () => {
                     isWin ? styles.winText : styles.loseText,
                   ]}
                 >
-                  {item.result || "Sonuç yok"}
+                  {isWin ? "Kazandınız" : "Kaybettiniz"}
                 </Text>
               </View>
             </View>
@@ -137,7 +132,7 @@ const FinishedGames = () => {
 
         <View style={styles.scoreSection}>
           <Text style={styles.scoreText}>
-            {item.userScore || "0"} - {item.opponentScore || "0"}
+            {item.user_score || 0} - {item.opponent_score || 0}
           </Text>
           <MaterialCommunityIcons
             name="chevron-right"
@@ -160,24 +155,31 @@ const FinishedGames = () => {
         </Text>
       </View>
 
-      <FlatList
-        data={historyGames}
-        renderItem={renderGameCard}
-        keyExtractor={(item) => item.gameId.toString()}
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons
-              name="history"
-              size={60}
-              color={Colors.textSecondary}
-            />
-            <Text style={styles.emptyText}>Geçmiş oyun bulunamadı</Text>
-          </View>
-        }
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
-      />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Yükleniyor...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={historyGames}
+          renderItem={renderGameCard}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContainer}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <MaterialCommunityIcons
+                name="history"
+                size={60}
+                color={Colors.textSecondary}
+              />
+              <Text style={styles.emptyText}>Geçmiş oyun bulunamadı</Text>
+            </View>
+          }
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+        />
+      )}
     </LinearGradient>
   );
 };

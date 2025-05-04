@@ -79,6 +79,16 @@ class SocketService {
       this.socket.off("move_made");
     }
   }
+
+  onGameResigned(callback) {
+    this.registerListener("game_resigned", callback);
+  }
+
+  offGameResigned() {
+    if (this.socket) {
+      this.socket.off("game_resigned");
+    }
+  }
 }
 
 const socketService = new SocketService();
